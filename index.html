@@ -11,14 +11,18 @@
   <title>Finance Hub</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; -webkit-font-smoothing: antialiased; }
     :root {
-      --bg: #080808; --s1: #111113; --s2: #18181b; --s3: #222226; --s4: #2c2c31;
-      --gold: #c8a84b; --gold2: #dfc06a; --gold3: #96793a; --goldbg: rgba(200,168,75,0.08);
+      --bg: #080808;
+      --s1: #111113; --s2: #18181b; --s3: #222226; --s4: #2c2c31;
+      --gold: #c8a84b; --gold2: #dfc06a; --gold3: #96793a; --goldbg: rgba(200,168,75,0.08); --goldbd: rgba(200,168,75,0.22);
       --t1: #f2f2f2; --t2: #9a9a9f; --t3: #55555a;
-      --grn: #3db87a; --red: #e05555; --blu: #5b8dee;
-      --br: #232328; --br2: #303036;
-      --r: 14px; --r2: 10px; --rm: 20px;
+      --grn: #3db87a; --grn2: rgba(61,184,122,.10);
+      --red: #e05555; --red2: rgba(224,85,85,.10);
+      --blu: #5b8dee; --blu2: rgba(91,141,238,.10);
+      --vio: #9b72dd; --vio2: rgba(155,114,221,.10);
+      --br: #1e1e22; --br2: #2a2a30; --br3: #323238;
+      --r: 16px; --r2: 12px; --r3: 8px;
     }
     html, body {
       background: var(--bg);
@@ -26,8 +30,7 @@
       font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', sans-serif;
       font-size: 15px;
       overflow-x: hidden;
-      min-height: 100vh;
-      min-height: 100dvh;
+      min-height: 100vh; min-height: 100dvh;
     }
     input, button, select { font-family: inherit; font-size: inherit; }
     input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
@@ -35,66 +38,164 @@
     .shell { min-height: 100vh; min-height: 100dvh; padding-bottom: 90px; }
     .page { display: none; } .page.on { display: block; }
 
-    /* COVER */
-    .cover {
-      height: 220px;
+    /* ── HERO STRIP ── */
+    .hero {
+      padding: 20px 18px 0;
       background: var(--s1);
-      position: relative;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      padding: 0 22px 22px;
-      padding-bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+      border-bottom: 0.5px solid var(--br);
     }
-    .cover-inner { position: relative; z-index: 1; }
-    .cover-eyebrow { font-size: 11px; letter-spacing: 2.5px; color: var(--gold); text-transform: uppercase; margin-bottom: 6px; font-weight: 500; }
-    .cover-balance { font-size: 46px; font-weight: 300; letter-spacing: -1.5px; line-height: 1; }
-    .cover-sub { font-size: 12px; color: var(--t2); margin-top: 7px; letter-spacing: .2px; }
+    .hero-eyebrow {
+      font-size: 10px; letter-spacing: 2.5px; color: var(--gold);
+      text-transform: uppercase; margin-bottom: 6px; font-weight: 500;
+    }
+    .hero-main-balance {
+      font-size: 48px; font-weight: 300; letter-spacing: -2px; line-height: 1;
+      margin-bottom: 4px;
+    }
+    .hero-sub { font-size: 11px; color: var(--t3); margin-bottom: 20px; letter-spacing: .2px; }
 
-    /* KPI */
-    .kpi-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 18px 18px 6px; }
-    .kpi { background: var(--s1); border: 0.5px solid var(--br); border-radius: var(--r2); padding: 14px 16px; }
-    .kpi-lbl { font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--t3); margin-bottom: 7px; }
-    .kpi-val { font-size: 22px; font-weight: 400; letter-spacing: -.5px; }
-    .kpi-val.g { color: var(--grn); } .kpi-val.r { color: var(--red); }
+    .wallet-strip {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; padding-bottom: 18px;
+    }
+    .wallet-card {
+      border-radius: var(--r2); padding: 13px 14px;
+      border: 0.5px solid var(--br2);
+      position: relative; overflow: hidden;
+    }
+    .wallet-card.carta { background: linear-gradient(135deg, #151521 0%, #111118 100%); border-color: rgba(91,141,238,.25); }
+    .wallet-card.contanti { background: linear-gradient(135deg, #151b15 0%, #111311 100%); border-color: rgba(61,184,122,.25); }
+    .wallet-card-eyebrow { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; font-weight: 500; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+    .wallet-card.carta .wallet-card-eyebrow { color: var(--blu); }
+    .wallet-card.contanti .wallet-card-eyebrow { color: var(--grn); }
+    .wallet-card-eyebrow i { font-size: 13px; }
+    .wallet-card-balance { font-size: 22px; font-weight: 300; letter-spacing: -.8px; }
 
-    /* SECTION HEADER */
+    /* ── KPI ROW ── */
+    .kpi-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; padding: 16px 18px 0; }
+    .kpi { background: var(--s1); border: 0.5px solid var(--br); border-radius: var(--r2); padding: 12px 14px; }
+    .kpi-lbl { font-size: 9px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--t3); margin-bottom: 6px; }
+    .kpi-val { font-size: 18px; font-weight: 400; letter-spacing: -.4px; }
+    .kpi-val.g { color: var(--grn); } .kpi-val.r { color: var(--red); } .kpi-val.v { color: var(--vio); }
+
+    /* ── QUICK SPEND WIDGET ── */
+    .qs-widget {
+      margin: 16px 18px 0;
+      background: var(--s1);
+      border: 0.5px solid var(--br2);
+      border-radius: var(--r);
+      overflow: hidden;
+    }
+    .qs-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 16px 11px;
+      border-bottom: 0.5px solid var(--br);
+    }
+    .qs-title {
+      font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase;
+      color: var(--t3); font-weight: 500; display: flex; align-items: center; gap: 6px;
+    }
+    .qs-title i { font-size: 14px; }
+    .qs-balances { display: flex; gap: 10px; }
+    .qs-bal-pill {
+      font-size: 10px; letter-spacing: .3px;
+      padding: 3px 8px; border-radius: 20px; font-weight: 500;
+    }
+    .qs-bal-pill.carta { background: var(--blu2); color: var(--blu); }
+    .qs-bal-pill.contanti { background: var(--grn2); color: var(--grn); }
+    .qs-body { padding: 12px 14px; }
+    .qs-source-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .qs-src-btn {
+      padding: 11px 0; border-radius: var(--r3); border: 0.5px solid var(--br2);
+      background: transparent; color: var(--t3); font-size: 12px; font-weight: 500;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all .15s; letter-spacing: .3px;
+    }
+    .qs-src-btn i { font-size: 16px; }
+    .qs-src-btn.carta-sel { border-color: var(--blu); color: var(--blu); background: var(--blu2); }
+    .qs-src-btn.contanti-sel { border-color: var(--grn); color: var(--grn); background: var(--grn2); }
+    .qs-input-row { display: flex; gap: 8px; align-items: center; }
+    .qs-amt-wrap { position: relative; flex: 1; }
+    .qs-amt-prefix {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      font-size: 16px; color: var(--t3); pointer-events: none;
+    }
+    .qs-amt {
+      width: 100%; background: var(--s2); border: 0.5px solid var(--br2);
+      border-radius: var(--r3); padding: 11px 12px 11px 26px;
+      color: var(--t1); font-size: 18px; font-weight: 400;
+      outline: none; transition: border-color .2s;
+    }
+    .qs-amt:focus { border-color: var(--br3); }
+    .qs-amt::placeholder { color: var(--t3); font-size: 16px; }
+    .qs-note {
+      width: 100%; background: var(--s2); border: 0.5px solid var(--br2);
+      border-radius: var(--r3); padding: 9px 12px;
+      color: var(--t1); font-size: 13px; outline: none;
+      transition: border-color .2s; margin-top: 8px;
+    }
+    .qs-note:focus { border-color: var(--br3); }
+    .qs-note::placeholder { color: var(--t3); }
+    .qs-submit {
+      width: 40px; height: 40px; border-radius: var(--r3); border: none;
+      background: var(--gold); color: #0a0a0a; font-size: 20px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: opacity .15s, transform .1s; flex-shrink: 0;
+    }
+    .qs-submit:active { opacity: .85; transform: scale(.94); }
+    .qs-submit.carta-mode { background: var(--blu); color: #fff; }
+    .qs-submit.contanti-mode { background: var(--grn); color: #fff; }
+
+    /* ── SECTION HEADER ── */
     .sec { padding: 18px 18px 4px; }
-    .sec-hdr { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--t3); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .sec-hdr {
+      font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+      color: var(--t3); margin-bottom: 12px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
 
-    /* CHART */
+    /* ── CHART ── */
     .chart-card { background: var(--s1); border: 0.5px solid var(--br); border-radius: var(--r); padding: 16px; margin: 0 18px 18px; }
     .chart-wrap { position: relative; width: 100%; height: 150px; }
 
-    /* TX LIST */
+    /* ── TX LIST ── */
     .tx-list { display: flex; flex-direction: column; gap: 1px; background: var(--br); border-radius: var(--r); overflow: hidden; }
     .tx-list-wrap { padding: 0 18px 18px; }
-    .tx-row { background: var(--s1); padding: 14px 16px; display: flex; align-items: center; gap: 12px; animation: ain .28s ease; }
-    @keyframes ain { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-    .tx-dot { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .tx-dot.g { background: rgba(61,184,122,.10); color: var(--grn); }
-    .tx-dot.r { background: rgba(224,85,85,.10); color: var(--red); }
-    .tx-dot i { font-size: 17px; }
+    .tx-row { background: var(--s1); padding: 13px 16px; display: flex; align-items: center; gap: 12px; animation: ain .25s ease; }
+    @keyframes ain { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+    .tx-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tx-icon.in-ico { background: var(--grn2); color: var(--grn); }
+    .tx-icon.out-ico { background: var(--red2); color: var(--red); }
+    .tx-icon.prel-ico { background: var(--vio2); color: var(--vio); }
+    .tx-icon.qs-ico { background: var(--blu2); color: var(--blu); }
+    .tx-icon i { font-size: 17px; }
     .tx-mid { flex: 1; min-width: 0; }
     .tx-tag { font-size: 10px; letter-spacing: 1.5px; font-weight: 500; text-transform: uppercase; }
-    .tx-note { font-size: 12px; color: var(--t2); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+    .tx-note { font-size: 12px; color: var(--t2); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
     .tx-time { font-size: 10px; color: var(--t3); margin-top: 2px; }
-    .tx-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    .tx-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; flex-shrink: 0; }
     .tx-amt { font-size: 16px; font-weight: 500; letter-spacing: -.3px; }
-    .tx-amt.g { color: var(--grn); } .tx-amt.r { color: var(--red); }
+    .tx-amt.g { color: var(--grn); } .tx-amt.r { color: var(--red); } .tx-amt.v { color: var(--vio); } .tx-amt.b { color: var(--blu); }
+    .tx-badge { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+    .tx-badge.carta-badge { background: var(--blu2); color: var(--blu); }
+    .tx-badge.contanti-badge { background: var(--grn2); color: var(--grn); }
+    .tx-badge.qs-badge { background: var(--blu2); color: var(--blu); }
     .tx-actions { display: flex; gap: 4px; }
-    .tx-action { background: var(--s2); border: 0.5px solid var(--br2); border-radius: 6px; color: var(--t3); font-size: 14px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: color .15s; }
+    .tx-action {
+      background: var(--s2); border: 0.5px solid var(--br2); border-radius: 6px;
+      color: var(--t3); font-size: 14px; width: 28px; height: 28px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; transition: color .15s;
+    }
     .tx-action:active { color: var(--t1); } .tx-action.del:active { color: var(--red); }
 
-    /* ALLOC */
+    /* ── ALLOC ── */
     .alloc-item { margin-bottom: 14px; }
     .alloc-top { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 5px; font-size: 13px; }
     .alloc-tag { font-weight: 500; } .alloc-right { font-size: 12px; color: var(--t2); }
     .alloc-track { height: 4px; background: var(--s3); border-radius: 2px; overflow: hidden; }
     .alloc-fill { height: 100%; border-radius: 2px; }
 
-    /* TAG GRID */
+    /* ── TAG GRID ── */
     .tag-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 0 18px 18px; }
     .tag-card { background: var(--s1); border: 0.5px solid var(--br); border-radius: var(--r2); padding: 16px; cursor: pointer; transition: background .15s; }
     .tag-card:active { background: var(--s2); }
@@ -103,14 +204,14 @@
     .tag-card-roi { font-size: 11px; }
     .tag-card-roi.pos { color: var(--grn); } .tag-card-roi.neg { color: var(--red); } .tag-card-roi.neu { color: var(--t3); }
 
-    /* TAG DETAIL */
+    /* ── TAG DETAIL ── */
     .back-row { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--gold); cursor: pointer; padding: 16px 18px 12px; }
     .back-row i { font-size: 18px; }
 
-    /* CALENDAR */
+    /* ── CALENDAR ── */
     .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 12px; }
     .cal-hd { font-size: 10px; letter-spacing: 1px; color: var(--t3); text-align: center; padding: 4px 0; text-transform: uppercase; }
-    .cal-cell { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 7px; font-size: 13px; color: var(--t2); cursor: pointer; position: relative; transition: background .15s; }
+    .cal-cell { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 8px; font-size: 13px; color: var(--t2); cursor: pointer; position: relative; transition: background .15s; }
     .cal-cell:active { background: var(--s3); }
     .cal-cell.today { background: var(--goldbg); color: var(--gold); font-weight: 500; }
     .cal-cell.sel { background: var(--gold); color: #111; font-weight: 500; }
@@ -121,7 +222,7 @@
     .cal-nav-btn { background: none; border: none; color: var(--t2); cursor: pointer; padding: 6px; font-size: 20px; display: flex; }
     .cal-nav-month { font-size: 16px; font-weight: 400; color: var(--t1); }
 
-    /* STATS */
+    /* ── STATS ── */
     .stats-block { padding: 0 18px; }
     .stat-row { background: var(--s1); border: 0.5px solid var(--br); border-radius: var(--r2); padding: 14px 16px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
     .stat-lbl { font-size: 13px; color: var(--t2); } .stat-val { font-size: 15px; font-weight: 500; }
@@ -129,137 +230,178 @@
     .ptab { flex: 1; padding: 9px 0; text-align: center; border-radius: var(--r2); font-size: 12px; font-weight: 500; letter-spacing: .5px; cursor: pointer; border: 0.5px solid var(--br); color: var(--t3); background: transparent; transition: all .15s; }
     .ptab.on { background: var(--goldbg); border-color: var(--gold3); color: var(--gold); }
 
-    /* SETTINGS */
-    .settings-list { padding: 0 18px; }
-    .set-item { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; border-bottom: 0.5px solid var(--br); cursor: pointer; }
-    .set-item:last-child { border-bottom: none; }
-    .set-lbl { font-size: 14px; color: var(--t1); } .set-sub { font-size: 11px; color: var(--t3); margin-top: 2px; }
-    .set-action { color: var(--t3); font-size: 20px; display: flex; }
-    .set-action.danger { color: var(--red); }
-
-    /* NAV BAR */
+    /* ── NAV BAR ── */
     .nav-bar {
       position: fixed; bottom: 0; left: 0; right: 0;
-      background: rgba(8,8,8,.96);
-      border-top: 0.5px solid var(--br);
-      display: flex;
-      padding: 10px 0;
+      background: rgba(8,8,8,.96); border-top: 0.5px solid var(--br);
+      display: flex; padding: 10px 0;
       padding-bottom: calc(10px + env(safe-area-inset-bottom, 16px));
-      z-index: 400;
+      z-index: 400; backdrop-filter: blur(12px);
     }
     .nav-it { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; color: var(--t3); transition: color .2s; padding: 4px 0; }
     .nav-it.on { color: var(--gold); }
-    .nav-it i { font-size: 23px; }
+    .nav-it i { font-size: 22px; }
     .nav-it span { font-size: 9px; letter-spacing: .8px; text-transform: uppercase; }
 
-    /* FAB */
+    /* ── FAB ── */
     .fab {
       position: fixed;
-      bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+      bottom: calc(82px + env(safe-area-inset-bottom, 0px));
       right: 20px;
-      width: 54px; height: 54px;
-      border-radius: 50%;
-      background: var(--gold);
-      color: #0a0a0a;
-      border: none;
-      cursor: pointer;
+      width: 52px; height: 52px;
+      border-radius: 50%; background: var(--gold); color: #0a0a0a;
+      border: none; cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      z-index: 410;
-      transition: transform .12s, opacity .12s;
+      z-index: 410; transition: transform .12s, opacity .12s;
+      box-shadow: 0 4px 20px rgba(200,168,75,.25);
     }
     .fab:active { transform: scale(.92); opacity: .9; }
     .fab i { font-size: 24px; }
 
-    /* OVERLAYS */
+    /* ── OVERLAYS ── */
     .overlay {
       position: fixed; inset: 0;
-      background: rgba(0,0,0,.7);
-      z-index: 500;
-      display: none;
-      align-items: flex-end;
+      background: rgba(0,0,0,.75);
+      z-index: 500; display: none; align-items: flex-end;
     }
     .overlay.on { display: flex; }
     .sheet {
-      background: var(--s1);
-      border-radius: 20px 20px 0 0;
+      background: var(--s1); border-radius: 22px 22px 0 0;
       padding: 12px 20px;
       padding-bottom: calc(32px + env(safe-area-inset-bottom, 0px));
-      width: 100%;
-      border-top: 0.5px solid var(--br2);
+      width: 100%; border-top: 0.5px solid var(--br2);
       animation: sheetup .22s ease;
     }
     @keyframes sheetup { from { transform: translateY(100%); } to { transform: translateY(0); } }
     .sheet-handle { width: 34px; height: 3px; background: var(--br2); border-radius: 2px; margin: 0 auto 18px; }
     .sheet-title { font-size: 17px; font-weight: 500; text-align: center; margin-bottom: 20px; }
 
-    /* FORM */
-    .type-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
-    .type-btn { padding: 14px 0; border-radius: var(--r2); border: 0.5px solid var(--br2); background: transparent; color: var(--t2); font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 7px; transition: all .15s; }
+    /* ── FORM ── */
+    .type-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+    .type-btn {
+      padding: 12px 0; border-radius: var(--r2); border: 0.5px solid var(--br2);
+      background: transparent; color: var(--t2); font-size: 12px; font-weight: 500;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 6px; transition: all .15s; flex-direction: column;
+    }
     .type-btn i { font-size: 20px; }
-    .type-btn.in-sel { border-color: var(--grn); color: var(--grn); background: rgba(61,184,122,.07); }
-    .type-btn.out-sel { border-color: var(--red); color: var(--red); background: rgba(224,85,85,.07); }
+    .type-btn.in-sel { border-color: var(--grn); color: var(--grn); background: var(--grn2); }
+    .type-btn.out-sel { border-color: var(--red); color: var(--red); background: var(--red2); }
+    .type-btn.prel-sel { border-color: var(--vio); color: var(--vio); background: var(--vio2); }
     .fi { margin-bottom: 16px; }
     .fl { font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--t3); margin-bottom: 7px; }
-    .fin { width: 100%; background: var(--s2); border: 0.5px solid var(--br2); border-radius: var(--r2); padding: 13px 15px; color: var(--t1); font-size: 16px; outline: none; transition: border-color .2s; }
-    .fin:focus { border-color: var(--gold3); }
+    .fin {
+      width: 100%; background: var(--s2); border: 0.5px solid var(--br2);
+      border-radius: var(--r2); padding: 13px 15px; color: var(--t1);
+      font-size: 16px; outline: none; transition: border-color .2s;
+    }
+    .fin:focus { border-color: var(--br3); }
     .fin::placeholder { color: var(--t3); }
     .tag-chips { display: flex; gap: 7px; flex-wrap: wrap; padding-top: 2px; }
-    .chip { padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: 500; letter-spacing: .8px; border: 0.5px solid var(--br2); color: var(--t3); background: transparent; cursor: pointer; transition: all .15s; text-transform: uppercase; }
+    .chip {
+      padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: 500;
+      letter-spacing: .8px; border: 0.5px solid var(--br2); color: var(--t3);
+      background: transparent; cursor: pointer; transition: all .15s; text-transform: uppercase;
+    }
     .chip.on { border-color: var(--gold3); color: var(--gold); background: var(--goldbg); }
-    .cta { width: 100%; padding: 16px; border-radius: var(--r2); background: var(--gold); color: #080808; font-size: 15px; font-weight: 600; border: none; cursor: pointer; letter-spacing: .3px; margin-top: 6px; transition: opacity .15s; }
+    .dest-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .dest-btn {
+      padding: 13px 0; border-radius: var(--r2); border: 0.5px solid var(--br2);
+      background: transparent; color: var(--t2); font-size: 13px; font-weight: 500;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      gap: 8px; transition: all .15s;
+    }
+    .dest-btn i { font-size: 19px; }
+    .dest-btn.carta-sel { border-color: var(--blu); color: var(--blu); background: var(--blu2); }
+    .dest-btn.contanti-sel { border-color: var(--grn); color: var(--grn); background: var(--grn2); }
+    .cta {
+      width: 100%; padding: 16px; border-radius: var(--r2); background: var(--gold);
+      color: #080808; font-size: 15px; font-weight: 600; border: none;
+      cursor: pointer; letter-spacing: .3px; margin-top: 6px; transition: opacity .15s;
+    }
     .cta:active { opacity: .85; }
     .cta.sec-cta { background: transparent; border: 0.5px solid var(--br2); color: var(--t2); margin-top: 8px; font-weight: 400; }
+    .cta.prel-cta { background: var(--vio); color: #fff; }
 
-    /* MISC */
+    /* ── MISC ── */
     .empty { text-align: center; padding: 36px 20px; color: var(--t3); font-size: 13px; line-height: 1.7; }
     .empty i { font-size: 36px; display: block; margin-bottom: 10px; opacity: .3; }
     .page-title { padding: 22px 18px 14px; display: flex; justify-content: space-between; align-items: center; }
     .page-title span { font-size: 20px; font-weight: 400; }
+    .divider { height: 0.5px; background: var(--br); margin: 0 18px; }
+    .feed-section-lbl {
+      font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--t3);
+      padding: 10px 4px 6px; font-weight: 500;
+    }
   </style>
 </head>
 <body>
 <div class="shell" id="shell">
 
-  <!-- OVERLAY: NUOVO MOVIMENTO -->
+  <!-- ═══════════════════════════════════════════
+       OVERLAY: NUOVO MOVIMENTO (Conto Centrale)
+  ═══════════════════════════════════════════ -->
   <div class="overlay" id="txSheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title">Nuovo movimento</div>
       <div class="type-row">
-        <button class="type-btn" id="btnIn" onclick="pickType('in')"><i class="ti ti-trending-up"></i>Entrata</button>
-        <button class="type-btn" id="btnOut" onclick="pickType('out')"><i class="ti ti-trending-down"></i>Uscita</button>
+        <button class="type-btn" id="btnIn"   onclick="pickType('in')">   <i class="ti ti-trending-up"></i>Entrata</button>
+        <button class="type-btn" id="btnOut"  onclick="pickType('out')">  <i class="ti ti-trending-down"></i>Uscita</button>
+        <button class="type-btn" id="btnPrel" onclick="pickType('prel')"> <i class="ti ti-wallet"></i>Prelievo</button>
+      </div>
+      <!-- Destinazione prelievo (mostrata solo per prelievo) -->
+      <div class="fi" id="destBlock" style="display:none">
+        <div class="fl">Destinazione prelievo</div>
+        <div class="dest-row">
+          <button class="dest-btn" id="dCarta"    onclick="pickDest('carta')">    <i class="ti ti-credit-card"></i>Carta Digitale</button>
+          <button class="dest-btn" id="dContanti" onclick="pickDest('contanti')"> <i class="ti ti-banknote"></i>Contanti</button>
+        </div>
       </div>
       <div class="fi"><div class="fl">Importo €</div><input class="fin" id="iAmt" type="number" inputmode="decimal" placeholder="0,00" /></div>
-      <div class="fi">
+      <!-- Tag (nascosto per prelievo) -->
+      <div class="fi" id="tagBlock">
         <div class="fl">Tag <span style="color:var(--t3);font-size:9px;letter-spacing:0;text-transform:none;font-weight:400">— opzionale</span></div>
         <div class="tag-chips" id="chipRow"></div>
       </div>
       <div class="fi"><div class="fl">Nota</div><input class="fin" id="iNote" type="text" placeholder="Causale, descrizione..." /></div>
-      <button class="cta" onclick="submitTx()">Registra</button>
+      <button class="cta" id="ctaSubmit" onclick="submitTx()">Registra</button>
       <button class="cta sec-cta" onclick="closeSheet('txSheet')">Annulla</button>
     </div>
   </div>
 
-  <!-- OVERLAY: MODIFICA MOVIMENTO -->
+  <!-- ═══════════════════════════════
+       OVERLAY: MODIFICA MOVIMENTO
+  ═══════════════════════════════ -->
   <div class="overlay" id="editSheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title">Modifica movimento</div>
       <div class="type-row">
-        <button class="type-btn" id="eBtnIn" onclick="pickEditType('in')"><i class="ti ti-trending-up"></i>Entrata</button>
-        <button class="type-btn" id="eBtnOut" onclick="pickEditType('out')"><i class="ti ti-trending-down"></i>Uscita</button>
+        <button class="type-btn" id="eBtnIn"   onclick="pickEditType('in')">   <i class="ti ti-trending-up"></i>Entrata</button>
+        <button class="type-btn" id="eBtnOut"  onclick="pickEditType('out')">  <i class="ti ti-trending-down"></i>Uscita</button>
+        <button class="type-btn" id="eBtnPrel" onclick="pickEditType('prel')"> <i class="ti ti-wallet"></i>Prelievo</button>
+      </div>
+      <div class="fi" id="eDestBlock" style="display:none">
+        <div class="fl">Destinazione prelievo</div>
+        <div class="dest-row">
+          <button class="dest-btn" id="eDCarta"    onclick="pickEditDest('carta')">    <i class="ti ti-credit-card"></i>Carta Digitale</button>
+          <button class="dest-btn" id="eDContanti" onclick="pickEditDest('contanti')"> <i class="ti ti-banknote"></i>Contanti</button>
+        </div>
       </div>
       <div class="fi"><div class="fl">Importo €</div><input class="fin" id="eAmt" type="number" inputmode="decimal" /></div>
-      <div class="fi"><div class="fl">Tag</div><div class="tag-chips" id="eChipRow"></div></div>
+      <div class="fi" id="eTagBlock"><div class="fl">Tag</div><div class="tag-chips" id="eChipRow"></div></div>
       <div class="fi"><div class="fl">Nota</div><input class="fin" id="eNote" type="text" /></div>
       <button class="cta" onclick="saveEdit()">Salva modifiche</button>
       <button class="cta sec-cta" onclick="closeSheet('editSheet')">Annulla</button>
     </div>
   </div>
 
-  <!-- OVERLAY: CONFERMA ELIMINA -->
+  <!-- ═══════════════════════════
+       OVERLAY: CONFERMA ELIMINA
+  ═══════════════════════════ -->
   <div class="overlay" id="delSheet">
-    <div class="sheet" style="padding-bottom: calc(20px + env(safe-area-inset-bottom,0px))">
+    <div class="sheet" style="padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))">
       <div class="sheet-handle"></div>
       <div class="sheet-title" style="margin-bottom:6px">Elimina movimento</div>
       <p style="text-align:center;font-size:13px;color:var(--t2);margin-bottom:20px">Questa azione non può essere annullata.</p>
@@ -270,7 +412,30 @@
     </div>
   </div>
 
-  <!-- OVERLAY: NUOVO TAG -->
+  <!-- ═══════════════════════════════
+       OVERLAY: MODIFICA SPESA RAPIDA
+  ═══════════════════════════════ -->
+  <div class="overlay" id="editQsSheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Modifica spesa rapida</div>
+      <div class="fi">
+        <div class="fl">Fonte</div>
+        <div class="dest-row">
+          <button class="dest-btn" id="eqsCarta"    onclick="pickEditQsSrc('carta')">    <i class="ti ti-credit-card"></i>Carta</button>
+          <button class="dest-btn" id="eqsContanti" onclick="pickEditQsSrc('contanti')"> <i class="ti ti-banknote"></i>Contanti</button>
+        </div>
+      </div>
+      <div class="fi"><div class="fl">Importo €</div><input class="fin" id="eqsAmt" type="number" inputmode="decimal" /></div>
+      <div class="fi"><div class="fl">Nota</div><input class="fin" id="eqsNote" type="text" /></div>
+      <button class="cta" onclick="saveEditQs()">Salva modifiche</button>
+      <button class="cta sec-cta" onclick="closeSheet('editQsSheet')">Annulla</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════
+       OVERLAY: NUOVO TAG
+  ═══════════════════════ -->
   <div class="overlay" id="addTagSheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
@@ -281,28 +446,76 @@
     </div>
   </div>
 
-  <!-- PAGE: HOME -->
+  <!-- ════════════════════════════════════════════
+       PAGE: HOME
+  ════════════════════════════════════════════ -->
   <div class="page on" id="pgHome">
-    <div class="cover">
-      <div class="cover-inner">
-        <div class="cover-eyebrow">Saldo totale</div>
-        <div class="cover-balance" id="hBalance">€ 0,00</div>
-        <div class="cover-sub" id="hSub">Aggiungi il primo movimento</div>
+    <!-- HERO: Conto Centrale -->
+    <div class="hero">
+      <div class="hero-eyebrow">Conto Centrale</div>
+      <div class="hero-main-balance" id="hBalance">€ 0,00</div>
+      <div class="hero-sub" id="hSub">Nessun movimento — premi + per iniziare</div>
+      <!-- Wallet strip: Carta + Contanti -->
+      <div class="wallet-strip">
+        <div class="wallet-card carta">
+          <div class="wallet-card-eyebrow"><i class="ti ti-credit-card"></i>Carta Digitale</div>
+          <div class="wallet-card-balance" id="hCarta">€ 0,00</div>
+        </div>
+        <div class="wallet-card contanti">
+          <div class="wallet-card-eyebrow"><i class="ti ti-banknote"></i>Contanti</div>
+          <div class="wallet-card-balance" id="hContanti">€ 0,00</div>
+        </div>
       </div>
     </div>
+
+    <!-- KPI: Entrate / Uscite / Prelievi -->
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-lbl">Entrate</div><div class="kpi-val g" id="hIncome">€ 0</div></div>
       <div class="kpi"><div class="kpi-lbl">Uscite</div><div class="kpi-val r" id="hOutcome">€ 0</div></div>
+      <div class="kpi"><div class="kpi-lbl">Prelievi</div><div class="kpi-val v" id="hPrelievi">€ 0</div></div>
     </div>
-    <div class="sec"><div class="sec-hdr"><span>Andamento capitale</span></div></div>
-    <div class="chart-card"><div class="chart-wrap"><canvas id="cGlobal" role="img" aria-label="Andamento saldo nel tempo"></canvas></div></div>
+
+    <!-- QUICK SPEND WIDGET -->
+    <div class="qs-widget">
+      <div class="qs-header">
+        <div class="qs-title"><i class="ti ti-bolt"></i>Spesa Rapida</div>
+        <div class="qs-balances">
+          <span class="qs-bal-pill carta" id="qsBadgeCarta">Carta € 0</span>
+          <span class="qs-bal-pill contanti" id="qsBadgeContanti">Cash € 0</span>
+        </div>
+      </div>
+      <div class="qs-body">
+        <div class="qs-source-row">
+          <button class="qs-src-btn" id="qsBtnCarta"    onclick="pickQsSrc('carta')">    <i class="ti ti-credit-card"></i>Scala da Carta</button>
+          <button class="qs-src-btn" id="qsBtnContanti" onclick="pickQsSrc('contanti')"> <i class="ti ti-banknote"></i>Scala da Cash</button>
+        </div>
+        <div class="qs-input-row">
+          <div class="qs-amt-wrap">
+            <span class="qs-amt-prefix">€</span>
+            <input class="qs-amt" id="qsAmt" type="number" inputmode="decimal" placeholder="0,00" />
+          </div>
+          <button class="qs-submit" id="qsSubmitBtn" onclick="submitQs()"><i class="ti ti-arrow-right"></i></button>
+        </div>
+        <input class="qs-note" id="qsNote" type="text" placeholder="Descrizione (opzionale)..." />
+      </div>
+    </div>
+
+    <!-- CHART -->
+    <div class="sec"><div class="sec-hdr"><span>Andamento Conto Centrale</span></div></div>
+    <div class="chart-card"><div class="chart-wrap"><canvas id="cGlobal"></canvas></div></div>
+
+    <!-- ALLOC -->
     <div class="sec"><div class="sec-hdr"><span>Allocazione per tag</span></div></div>
     <div style="padding:0 18px 18px" id="allocBlock"></div>
+
+    <!-- FEED -->
     <div class="sec"><div class="sec-hdr"><span>Ultimi movimenti</span></div></div>
     <div class="tx-list-wrap"><div class="tx-list" id="feedHomeList"></div></div>
   </div>
 
-  <!-- PAGE: TAG -->
+  <!-- ════════════════════════════
+       PAGE: TAG
+  ════════════════════════════ -->
   <div class="page" id="pgTag">
     <div id="tagListView">
       <div class="page-title">
@@ -315,26 +528,30 @@
       <div class="back-row" onclick="showTagList()"><i class="ti ti-chevron-left"></i><span>Portafoglio</span></div>
       <div style="padding:0 18px">
         <div class="tag-card" id="tagDetailHero" style="cursor:default;margin-bottom:16px"></div>
-        <div class="chart-card" style="margin:0 0 16px"><div class="chart-wrap"><canvas id="cTag" role="img" aria-label="Andamento tag"></canvas></div></div>
+        <div class="chart-card" style="margin:0 0 16px"><div class="chart-wrap"><canvas id="cTag"></canvas></div></div>
         <div class="sec-hdr" id="tagDetailTitle" style="margin-bottom:12px">Movimenti</div>
         <div class="tx-list" id="tagFeed"></div>
       </div>
     </div>
   </div>
 
-  <!-- PAGE: CALENDARIO -->
+  <!-- ════════════════════════
+       PAGE: CALENDARIO
+  ════════════════════════ -->
   <div class="page" id="pgCal">
     <div class="cal-nav">
-      <button class="cal-nav-btn" onclick="calShift(-1)" aria-label="Mese precedente"><i class="ti ti-chevron-left"></i></button>
+      <button class="cal-nav-btn" onclick="calShift(-1)"><i class="ti ti-chevron-left"></i></button>
       <span class="cal-nav-month" id="calLabel"></span>
-      <button class="cal-nav-btn" onclick="calShift(1)" aria-label="Mese successivo"><i class="ti ti-chevron-right"></i></button>
+      <button class="cal-nav-btn" onclick="calShift(1)"><i class="ti ti-chevron-right"></i></button>
     </div>
     <div style="padding:0 18px"><div class="cal-grid" id="calGrid"></div></div>
     <div class="sec" style="padding-top:16px"><div class="sec-hdr" id="calDayHdr">Seleziona un giorno</div></div>
     <div class="tx-list-wrap"><div class="tx-list" id="calFeed"></div></div>
   </div>
 
-  <!-- PAGE: ANALISI -->
+  <!-- ════════════════════════
+       PAGE: ANALISI
+  ════════════════════════ -->
   <div class="page" id="pgStats">
     <div class="page-title"><span>Analisi</span></div>
     <div class="period-tabs">
@@ -345,101 +562,346 @@
     </div>
     <div class="stats-block" id="statsBlock"></div>
     <div class="sec" style="padding-top:4px"><div class="sec-hdr">Andamento periodo</div></div>
-    <div class="chart-card"><div class="chart-wrap"><canvas id="cStats" role="img" aria-label="Grafico statistiche periodo"></canvas></div></div>
+    <div class="chart-card"><div class="chart-wrap"><canvas id="cStats"></canvas></div></div>
     <div class="sec"><div class="sec-hdr">Impostazioni</div></div>
-    <div class="settings-list">
-      <div class="set-item" onclick="openAddTag()">
-        <div><div class="set-lbl">Gestisci tag</div><div class="set-sub">Crea nuovi tag di investimento</div></div>
-        <div class="set-action"><i class="ti ti-tag"></i></div>
+    <div style="padding:0 18px 18px">
+      <div class="stat-row" style="cursor:pointer" onclick="openAddTag()">
+        <span class="stat-lbl">Gestisci tag</span>
+        <span style="color:var(--t3);font-size:20px"><i class="ti ti-tag"></i></span>
       </div>
-      <div class="set-item" onclick="exportData()">
-        <div><div class="set-lbl">Esporta dati</div><div class="set-sub">Scarica JSON di tutti i movimenti</div></div>
-        <div class="set-action"><i class="ti ti-download"></i></div>
+      <div class="stat-row" style="cursor:pointer" onclick="exportData()">
+        <span class="stat-lbl">Esporta dati (JSON)</span>
+        <span style="color:var(--t3);font-size:20px"><i class="ti ti-download"></i></span>
       </div>
-      <div class="set-item" onclick="confirmReset()">
-        <div><div class="set-lbl">Reset completo</div><div class="set-sub">Elimina tutti i dati salvati</div></div>
-        <div class="set-action danger"><i class="ti ti-trash"></i></div>
+      <div class="stat-row" style="cursor:pointer" onclick="confirmReset()">
+        <span class="stat-lbl" style="color:var(--red)">Reset completo</span>
+        <span style="color:var(--red);font-size:20px"><i class="ti ti-trash"></i></span>
       </div>
     </div>
-    <div style="height:20px"></div>
   </div>
 
-  <!-- BOTTOM NAV -->
+  <!-- ════════ NAV ════════ -->
   <nav class="nav-bar">
-    <div class="nav-it on" id="nHome" onclick="goPage('pgHome','nHome')"><i class="ti ti-home"></i><span>Home</span></div>
-    <div class="nav-it" id="nTag" onclick="goPage('pgTag','nTag')"><i class="ti ti-tag"></i><span>Tag</span></div>
-    <div class="nav-it" id="nCal" onclick="goPage('pgCal','nCal')"><i class="ti ti-calendar"></i><span>Calendario</span></div>
-    <div class="nav-it" id="nStats" onclick="goPage('pgStats','nStats')"><i class="ti ti-chart-bar"></i><span>Analisi</span></div>
+    <div class="nav-it on" id="nHome"  onclick="goPage('pgHome','nHome')">  <i class="ti ti-home"></i>  <span>Home</span></div>
+    <div class="nav-it"    id="nTag"   onclick="goPage('pgTag','nTag')">    <i class="ti ti-tag"></i>   <span>Tag</span></div>
+    <div class="nav-it"    id="nCal"   onclick="goPage('pgCal','nCal')">    <i class="ti ti-calendar"></i><span>Calendario</span></div>
+    <div class="nav-it"    id="nStats" onclick="goPage('pgStats','nStats')"><i class="ti ti-chart-bar"></i><span>Analisi</span></div>
   </nav>
 
-  <button class="fab" onclick="openNewTx()" aria-label="Aggiungi movimento"><i class="ti ti-plus"></i></button>
+  <button class="fab" onclick="openNewTx()"><i class="ti ti-plus"></i></button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
-const DB = 'fh2';
-let txType = null, selTag = null, editId = null, delId = null, editTxType = null, editSelTag = null;
-let calViewY = null, calViewM = null, calSelDay = null, statPeriod = 'week';
-let charts = {};
+// ═══════════════════════════════════════════════════════
+//  DATA LAYER
+// ═══════════════════════════════════════════════════════
+const DB_KEY = 'fh3';
 
-function load() {
-  const r = localStorage.getItem(DB);
-  return r ? JSON.parse(r) : { tags: [], transactions: [], tColors: {} };
+function loadData() {
+  try {
+    const raw = localStorage.getItem(DB_KEY);
+    const d = raw ? JSON.parse(raw) : {};
+    return {
+      tags:         d.tags         || [],
+      tColors:      d.tColors      || {},
+      transactions: d.transactions || [],   // {id, type:'in'|'out'|'prel', amount, tag, note, ts, dest:'carta'|'contanti'|null}
+      quickSpends:  d.quickSpends  || []    // {id, amount, note, source:'carta'|'contanti', ts}
+    };
+  } catch(e) {
+    return { tags:[], tColors:{}, transactions:[], quickSpends:[] };
+  }
 }
-function save(d) { localStorage.setItem(DB, JSON.stringify(d)); }
 
-const PALETTE = ['#c8a84b','#5b8dee','#3db87a','#e05555','#a07cde','#56c7c7','#e88a2c','#e85baf','#78c97a','#d4a44c'];
+function saveData(d) {
+  localStorage.setItem(DB_KEY, JSON.stringify(d));
+}
+
+// ── Derived balances ──
+function calcBalances(d) {
+  let income = 0, outcome = 0, prelievi = 0, cartaIn = 0, contantiIn = 0, cartaOut = 0, contantiOut = 0;
+  d.transactions.forEach(t => {
+    if (t.type === 'in')   income   += t.amount;
+    if (t.type === 'out')  outcome  += t.amount;
+    if (t.type === 'prel') {
+      prelievi += t.amount;
+      if (t.dest === 'carta')    cartaIn    += t.amount;
+      if (t.dest === 'contanti') contantiIn += t.amount;
+    }
+  });
+  d.quickSpends.forEach(qs => {
+    if (qs.source === 'carta')    cartaOut    += qs.amount;
+    if (qs.source === 'contanti') contantiOut += qs.amount;
+  });
+  return {
+    conto:    income - outcome - prelievi,
+    income, outcome, prelievi,
+    carta:    cartaIn    - cartaOut,
+    contanti: contantiIn - contantiOut
+  };
+}
+
+// ── Palette & color helpers ──
+const PALETTE = ['#c8a84b','#5b8dee','#3db87a','#e05555','#9b72dd','#56c7c7','#e88a2c','#e85baf','#78c97a','#d4a44c'];
 function tColor(tag, d) {
-  if (!d.tColors) d.tColors = {};
-  if (!d.tColors[tag]) { d.tColors[tag] = PALETTE[Object.keys(d.tColors).length % PALETTE.length]; save(d); }
+  if (!d.tColors[tag]) {
+    d.tColors[tag] = PALETTE[Object.keys(d.tColors).length % PALETTE.length];
+    saveData(d);
+  }
   return d.tColors[tag];
 }
-function fEur(n) { return '€\u00a0' + parseFloat(n).toLocaleString('it-IT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-function fShort(n) { return '€\u00a0' + parseFloat(n).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 }); }
+
+// ── Formatters ──
+function fEur(n) {
+  return '€\u00a0' + parseFloat(n).toLocaleString('it-IT', { minimumFractionDigits:2, maximumFractionDigits:2 });
+}
+function fShort(n) {
+  return '€\u00a0' + parseFloat(n).toLocaleString('it-IT', { minimumFractionDigits:0, maximumFractionDigits:0 });
+}
 function fDate(ts) {
   const d = new Date(ts);
-  return d.toLocaleDateString('it-IT', { day: '2-digit', month: 'short' }) + '\u2009·\u2009' + d.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString('it-IT', {day:'2-digit', month:'short'}) + '\u2009·\u2009' +
+         d.toLocaleTimeString('it-IT', {hour:'2-digit', minute:'2-digit'});
 }
-function calcStats(txs) {
-  let i = 0, o = 0;
-  txs.forEach(t => { t.type === 'in' ? i += t.amount : o += t.amount; });
-  return { i, o, b: i - o };
+function fShortEur(n) {
+  const abs = Math.abs(n);
+  if (abs >= 1000) return '€\u00a0' + (n/1000).toLocaleString('it-IT',{minimumFractionDigits:1,maximumFractionDigits:1}) + 'k';
+  return fShort(n);
 }
 
+// ═══════════════════════════════════════════════════════
+//  STATE (form)
+// ═══════════════════════════════════════════════════════
+let txType       = null, selTag       = null, selDest    = null;
+let editId       = null, editTxType   = null, editSelTag = null, editSelDest = null;
+let editQsId     = null, editQsSrc    = null;
+let delId        = null, delType      = null; // delType: 'tx' | 'qs'
+let qsSrc        = null;
+let calViewY     = null, calViewM     = null, calSelDay  = null;
+let statPeriod   = 'week';
+let charts       = {};
+
+// ═══════════════════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════════════════
 function goPage(pg, nav) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
   document.querySelectorAll('.nav-it').forEach(n => n.classList.remove('on'));
   document.getElementById(pg).classList.add('on');
   document.getElementById(nav).classList.add('on');
-  if (pg === 'pgHome') renderHome();
-  if (pg === 'pgTag') renderTagList();
-  if (pg === 'pgCal') { if (!calViewY) { const n = new Date(); calViewY = n.getFullYear(); calViewM = n.getMonth(); } renderCal(); }
+  if (pg === 'pgHome')  renderHome();
+  if (pg === 'pgTag')   renderTagList();
+  if (pg === 'pgCal')   { if (!calViewY) { const n=new Date(); calViewY=n.getFullYear(); calViewM=n.getMonth(); } renderCal(); }
   if (pg === 'pgStats') renderStats();
 }
 
 function closeSheet(id) { document.getElementById(id).classList.remove('on'); }
 
+// ═══════════════════════════════════════════════════════
+//  OPEN / ADD TX (Conto Centrale)
+// ═══════════════════════════════════════════════════════
 function openNewTx() {
-  const d = load();
-  txType = null; selTag = null;
-  document.getElementById('btnIn').className = 'type-btn';
-  document.getElementById('btnOut').className = 'type-btn';
+  const d = loadData();
+  txType = null; selTag = null; selDest = null;
+  ['btnIn','btnOut','btnPrel'].forEach(id => document.getElementById(id).className='type-btn');
   document.getElementById('iAmt').value = '';
   document.getElementById('iNote').value = '';
-  buildChips('chipRow', d, null, function cb(t) { selTag = selTag === t ? null : t; buildChips('chipRow', d, selTag, cb); });
+  document.getElementById('destBlock').style.display = 'none';
+  document.getElementById('tagBlock').style.display  = '';
+  document.getElementById('ctaSubmit').className = 'cta';
+  ['dCarta','dContanti'].forEach(id => document.getElementById(id).className='dest-btn');
+  buildChips('chipRow', d, null, function cb(t) { selTag = selTag===t ? null : t; buildChips('chipRow', d, selTag, cb); });
   document.getElementById('txSheet').classList.add('on');
   setTimeout(() => document.getElementById('iAmt').focus(), 350);
 }
 
 function pickType(t) {
   txType = t;
-  document.getElementById('btnIn').className = 'type-btn' + (t === 'in' ? ' in-sel' : '');
-  document.getElementById('btnOut').className = 'type-btn' + (t === 'out' ? ' out-sel' : '');
+  document.getElementById('btnIn').className   = 'type-btn' + (t==='in'   ? ' in-sel'   : '');
+  document.getElementById('btnOut').className  = 'type-btn' + (t==='out'  ? ' out-sel'  : '');
+  document.getElementById('btnPrel').className = 'type-btn' + (t==='prel' ? ' prel-sel' : '');
+  document.getElementById('destBlock').style.display = (t==='prel') ? '' : 'none';
+  document.getElementById('tagBlock').style.display  = (t==='prel') ? 'none' : '';
+  const cta = document.getElementById('ctaSubmit');
+  cta.className = t==='prel' ? 'cta prel-cta' : 'cta';
 }
+
+function pickDest(dest) {
+  selDest = dest;
+  document.getElementById('dCarta').className    = 'dest-btn' + (dest==='carta'    ? ' carta-sel'    : '');
+  document.getElementById('dContanti').className = 'dest-btn' + (dest==='contanti' ? ' contanti-sel' : '');
+}
+
+function submitTx() {
+  if (!txType) { shake('btnIn'); return; }
+  const amt = parseFloat(document.getElementById('iAmt').value);
+  if (!amt || amt <= 0) { shake('iAmt'); return; }
+  if (txType === 'prel' && !selDest) { shake('dCarta'); shake('dContanti'); return; }
+  const note = document.getElementById('iNote').value.trim();
+  const d = loadData();
+  d.transactions.push({
+    id:    Date.now(),
+    type:  txType,
+    amount: amt,
+    tag:   (txType === 'prel') ? null : (selTag || null),
+    note,
+    ts:    Date.now(),
+    dest:  (txType === 'prel') ? selDest : null
+  });
+  saveData(d);
+  closeSheet('txSheet');
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════
+//  EDIT TX
+// ═══════════════════════════════════════════════════════
+function openEditTx(id) {
+  const d = loadData();
+  const tx = d.transactions.find(t => t.id === id);
+  if (!tx) return;
+  editId = id; editTxType = tx.type; editSelTag = tx.tag || null; editSelDest = tx.dest || null;
+  pickEditType(tx.type);
+  if (tx.type === 'prel' && tx.dest) pickEditDest(tx.dest);
+  document.getElementById('eAmt').value  = tx.amount;
+  document.getElementById('eNote').value = tx.note || '';
+  buildChips('eChipRow', d, editSelTag, function cb(t) { editSelTag = editSelTag===t ? null : t; buildChips('eChipRow', d, editSelTag, cb); });
+  document.getElementById('editSheet').classList.add('on');
+}
+
 function pickEditType(t) {
   editTxType = t;
-  document.getElementById('eBtnIn').className = 'type-btn' + (t === 'in' ? ' in-sel' : '');
-  document.getElementById('eBtnOut').className = 'type-btn' + (t === 'out' ? ' out-sel' : '');
+  document.getElementById('eBtnIn').className   = 'type-btn' + (t==='in'   ? ' in-sel'   : '');
+  document.getElementById('eBtnOut').className  = 'type-btn' + (t==='out'  ? ' out-sel'  : '');
+  document.getElementById('eBtnPrel').className = 'type-btn' + (t==='prel' ? ' prel-sel' : '');
+  document.getElementById('eDestBlock').style.display = (t==='prel') ? '' : 'none';
+  document.getElementById('eTagBlock').style.display  = (t==='prel') ? 'none' : '';
+}
+
+function pickEditDest(dest) {
+  editSelDest = dest;
+  document.getElementById('eDCarta').className    = 'dest-btn' + (dest==='carta'    ? ' carta-sel'    : '');
+  document.getElementById('eDContanti').className = 'dest-btn' + (dest==='contanti' ? ' contanti-sel' : '');
+}
+
+function saveEdit() {
+  const amt = parseFloat(document.getElementById('eAmt').value);
+  if (!amt || amt <= 0) { shake('eAmt'); return; }
+  if (editTxType === 'prel' && !editSelDest) { shake('eDCarta'); return; }
+  const d = loadData();
+  const idx = d.transactions.findIndex(t => t.id === editId);
+  if (idx > -1) {
+    d.transactions[idx].type   = editTxType;
+    d.transactions[idx].amount = amt;
+    d.transactions[idx].tag    = (editTxType === 'prel') ? null : editSelTag;
+    d.transactions[idx].dest   = (editTxType === 'prel') ? editSelDest : null;
+    d.transactions[idx].note   = document.getElementById('eNote').value.trim();
+  }
+  saveData(d);
+  closeSheet('editSheet');
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════
+//  DELETE TX / QS
+// ═══════════════════════════════════════════════════════
+function askDel(id, type) {
+  delId = id; delType = type || 'tx';
+  document.getElementById('delSheet').classList.add('on');
+}
+
+function confirmDel() {
+  const d = loadData();
+  if (delType === 'qs') {
+    d.quickSpends = d.quickSpends.filter(q => q.id !== delId);
+  } else {
+    d.transactions = d.transactions.filter(t => t.id !== delId);
+  }
+  saveData(d);
+  closeSheet('delSheet');
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════
+//  QUICK SPEND
+// ═══════════════════════════════════════════════════════
+function pickQsSrc(src) {
+  qsSrc = src;
+  document.getElementById('qsBtnCarta').className    = 'qs-src-btn' + (src==='carta'    ? ' carta-sel'    : '');
+  document.getElementById('qsBtnContanti').className = 'qs-src-btn' + (src==='contanti' ? ' contanti-sel' : '');
+  const btn = document.getElementById('qsSubmitBtn');
+  btn.className = 'qs-submit' + (src==='carta' ? ' carta-mode' : src==='contanti' ? ' contanti-mode' : '');
+}
+
+function submitQs() {
+  if (!qsSrc) { shakeEl(document.getElementById('qsBtnCarta')); return; }
+  const amt = parseFloat(document.getElementById('qsAmt').value);
+  if (!amt || amt <= 0) { shake('qsAmt'); return; }
+  const d = loadData();
+  const bal = calcBalances(d);
+  const avail = qsSrc === 'carta' ? bal.carta : bal.contanti;
+  if (amt > avail) { shake('qsAmt'); return; }
+  const note = document.getElementById('qsNote').value.trim();
+  d.quickSpends.push({ id: Date.now(), amount: amt, note, source: qsSrc, ts: Date.now() });
+  saveData(d);
+  document.getElementById('qsAmt').value  = '';
+  document.getElementById('qsNote').value = '';
+  renderAll();
+  // pulse animation on wallet card
+  const card = qsSrc === 'carta' ? document.getElementById('hCarta') : document.getElementById('hContanti');
+  card.style.transition = 'color .1s';
+  card.style.color = 'var(--red)';
+  setTimeout(() => { card.style.color = ''; }, 600);
+}
+
+function openEditQs(id) {
+  const d = loadData();
+  const qs = d.quickSpends.find(q => q.id === id);
+  if (!qs) return;
+  editQsId = id; editQsSrc = qs.source;
+  pickEditQsSrc(qs.source);
+  document.getElementById('eqsAmt').value  = qs.amount;
+  document.getElementById('eqsNote').value = qs.note || '';
+  document.getElementById('editQsSheet').classList.add('on');
+}
+
+function pickEditQsSrc(src) {
+  editQsSrc = src;
+  document.getElementById('eqsCarta').className    = 'dest-btn' + (src==='carta'    ? ' carta-sel'    : '');
+  document.getElementById('eqsContanti').className = 'dest-btn' + (src==='contanti' ? ' contanti-sel' : '');
+}
+
+function saveEditQs() {
+  const amt = parseFloat(document.getElementById('eqsAmt').value);
+  if (!amt || amt <= 0) { shake('eqsAmt'); return; }
+  const d = loadData();
+  const idx = d.quickSpends.findIndex(q => q.id === editQsId);
+  if (idx > -1) {
+    d.quickSpends[idx].source = editQsSrc;
+    d.quickSpends[idx].amount = amt;
+    d.quickSpends[idx].note   = document.getElementById('eqsNote').value.trim();
+  }
+  saveData(d);
+  closeSheet('editQsSheet');
+  renderAll();
+}
+
+// ═══════════════════════════════════════════════════════
+//  TAG MANAGEMENT
+// ═══════════════════════════════════════════════════════
+function openAddTag() {
+  document.getElementById('iTagName').value = '';
+  document.getElementById('addTagSheet').classList.add('on');
+  setTimeout(() => document.getElementById('iTagName').focus(), 350);
+}
+
+function doAddTag() {
+  const name = document.getElementById('iTagName').value.trim().toUpperCase();
+  if (!name) return;
+  const d = loadData();
+  if (!d.tags.includes(name)) { d.tags.push(name); saveData(d); }
+  closeSheet('addTagSheet');
+  renderTagList();
 }
 
 function buildChips(rowId, d, active, cb) {
@@ -451,163 +913,166 @@ function buildChips(rowId, d, active, cb) {
   }
   d.tags.forEach(tag => {
     const b = document.createElement('button');
-    b.className = 'chip' + (active === tag ? ' on' : '');
+    b.className = 'chip' + (active===tag ? ' on' : '');
     b.textContent = tag;
     b.onclick = () => cb(tag);
     row.appendChild(b);
   });
 }
 
-function shake(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.style.borderColor = 'var(--red)';
-  setTimeout(() => { el.style.borderColor = ''; }, 1200);
-}
-
-function submitTx() {
-  if (!txType) { shake('btnIn'); shake('btnOut'); return; }
-  const amt = parseFloat(document.getElementById('iAmt').value);
-  if (!amt || amt <= 0) { shake('iAmt'); return; }
-  const note = document.getElementById('iNote').value.trim();
-  const d = load();
-  d.transactions.push({ id: Date.now(), type: txType, amount: amt, tag: selTag || null, note, ts: Date.now() });
-  save(d);
-  closeSheet('txSheet');
-  renderAll();
-}
-
-function openEditTx(id) {
-  const d = load();
-  const tx = d.transactions.find(t => t.id === id);
-  if (!tx) return;
-  editId = id; editTxType = tx.type; editSelTag = tx.tag || null;
-  pickEditType(tx.type);
-  document.getElementById('eAmt').value = tx.amount;
-  document.getElementById('eNote').value = tx.note || '';
-  buildChips('eChipRow', d, editSelTag, function cb(t) { editSelTag = editSelTag === t ? null : t; buildChips('eChipRow', d, editSelTag, cb); });
-  document.getElementById('editSheet').classList.add('on');
-}
-
-function saveEdit() {
-  const amt = parseFloat(document.getElementById('eAmt').value);
-  if (!amt || amt <= 0) { shake('eAmt'); return; }
-  const d = load();
-  const idx = d.transactions.findIndex(t => t.id === editId);
-  if (idx > -1) {
-    d.transactions[idx].type = editTxType;
-    d.transactions[idx].amount = amt;
-    d.transactions[idx].tag = editSelTag;
-    d.transactions[idx].note = document.getElementById('eNote').value.trim();
-  }
-  save(d);
-  closeSheet('editSheet');
-  renderAll();
-}
-
-function askDel(id) { delId = id; document.getElementById('delSheet').classList.add('on'); }
-function confirmDel() {
-  const d = load();
-  d.transactions = d.transactions.filter(t => t.id !== delId);
-  save(d);
-  closeSheet('delSheet');
-  renderAll();
-}
-
-function openAddTag() {
-  document.getElementById('iTagName').value = '';
-  document.getElementById('addTagSheet').classList.add('on');
-  setTimeout(() => document.getElementById('iTagName').focus(), 350);
-}
-function doAddTag() {
-  const name = document.getElementById('iTagName').value.trim().toUpperCase();
-  if (!name) return;
-  const d = load();
-  if (!d.tags.includes(name)) { d.tags.push(name); save(d); }
-  closeSheet('addTagSheet');
-  renderTagList();
-}
-
+// ═══════════════════════════════════════════════════════
+//  RENDER ALL
+// ═══════════════════════════════════════════════════════
 function renderAll() {
-  if (document.getElementById('pgHome').classList.contains('on')) renderHome();
-  if (document.getElementById('pgTag').classList.contains('on')) renderTagList();
-  if (document.getElementById('pgCal').classList.contains('on')) renderCal();
+  if (document.getElementById('pgHome').classList.contains('on'))  renderHome();
+  if (document.getElementById('pgTag').classList.contains('on'))   renderTagList();
+  if (document.getElementById('pgCal').classList.contains('on'))   renderCal();
   if (document.getElementById('pgStats').classList.contains('on')) renderStats();
 }
 
+// ═══════════════════════════════════════════════════════
+//  TX ROW BUILDER
+// ═══════════════════════════════════════════════════════
 function makeTxRow(tx, d) {
   const div = document.createElement('div');
   div.className = 'tx-row';
-  const col = tx.tag ? tColor(tx.tag, d) : 'var(--t3)';
+  const isPrel = tx.type === 'prel';
+  const col = (tx.tag && !isPrel) ? tColor(tx.tag, d) : isPrel ? 'var(--vio)' : 'var(--t3)';
+  const iconCls = tx.type==='in' ? 'in-ico' : isPrel ? 'prel-ico' : 'out-ico';
+  const iconName = tx.type==='in' ? 'trending-up' : isPrel ? 'wallet' : 'trending-down';
+  const amtCls = tx.type==='in' ? 'g' : isPrel ? 'v' : 'r';
+  const sign = tx.type==='in' ? '+' : '−';
+  let badgeHtml = '';
+  if (isPrel && tx.dest) {
+    badgeHtml = `<span class="tx-badge ${tx.dest}-badge">${tx.dest === 'carta' ? 'Carta' : 'Cash'}</span>`;
+  }
   div.innerHTML = `
-    <div class="tx-dot ${tx.type === 'in' ? 'g' : 'r'}"><i class="ti ti-trending-${tx.type === 'in' ? 'up' : 'down'}"></i></div>
+    <div class="tx-icon ${iconCls}"><i class="ti ti-${iconName}"></i></div>
     <div class="tx-mid">
-      <div class="tx-tag" style="color:${col}">${tx.tag || '—'}</div>
+      <div class="tx-tag" style="color:${col}">${isPrel ? 'PRELIEVO' : (tx.tag || '—')}</div>
       ${tx.note ? `<div class="tx-note">${tx.note}</div>` : ''}
       <div class="tx-time">${fDate(tx.ts)}</div>
     </div>
     <div class="tx-right">
-      <div class="tx-amt ${tx.type === 'in' ? 'g' : 'r'}">${tx.type === 'in' ? '+' : '-'}${fEur(tx.amount)}</div>
+      <div class="tx-amt ${amtCls}">${sign}${fEur(tx.amount)}</div>
+      ${badgeHtml}
       <div class="tx-actions">
-        <button class="tx-action" onclick="openEditTx(${tx.id})" aria-label="Modifica"><i class="ti ti-edit"></i></button>
-        <button class="tx-action del" onclick="askDel(${tx.id})" aria-label="Elimina"><i class="ti ti-trash"></i></button>
+        <button class="tx-action"     onclick="openEditTx(${tx.id})" aria-label="Modifica"><i class="ti ti-edit"></i></button>
+        <button class="tx-action del" onclick="askDel(${tx.id},'tx')" aria-label="Elimina"><i class="ti ti-trash"></i></button>
       </div>
     </div>`;
   return div;
 }
 
+function makeQsRow(qs) {
+  const div = document.createElement('div');
+  div.className = 'tx-row';
+  const isCarta = qs.source === 'carta';
+  div.innerHTML = `
+    <div class="tx-icon qs-ico"><i class="ti ti-${isCarta ? 'credit-card' : 'banknote'}"></i></div>
+    <div class="tx-mid">
+      <div class="tx-tag" style="color:${isCarta ? 'var(--blu)' : 'var(--grn)'}">SPESA RAPIDA</div>
+      ${qs.note ? `<div class="tx-note">${qs.note}</div>` : ''}
+      <div class="tx-time">${fDate(qs.ts)}</div>
+    </div>
+    <div class="tx-right">
+      <div class="tx-amt ${isCarta ? 'b' : 'g'}">−${fEur(qs.amount)}</div>
+      <span class="tx-badge ${isCarta ? 'carta' : 'contanti'}-badge">${isCarta ? 'Carta' : 'Cash'}</span>
+      <div class="tx-actions">
+        <button class="tx-action"     onclick="openEditQs(${qs.id})"    aria-label="Modifica"><i class="ti ti-edit"></i></button>
+        <button class="tx-action del" onclick="askDel(${qs.id},'qs')"   aria-label="Elimina"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`;
+  return div;
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER HOME
+// ═══════════════════════════════════════════════════════
 function renderHome() {
-  const d = load();
-  const txs = d.transactions;
-  const { i, o, b } = calcStats(txs);
-  document.getElementById('hBalance').textContent = fEur(b);
-  document.getElementById('hIncome').textContent = fShort(i);
-  document.getElementById('hOutcome').textContent = fShort(o);
-  const n = txs.length;
-  document.getElementById('hSub').textContent = n
-    ? `${n} moviment${n === 1 ? 'o' : 'i'} · aggiornato ${fDate(Math.max(...txs.map(t => t.ts)))}`
-    : 'Aggiungi il primo movimento';
-  buildGlobalChart(txs);
-  buildAlloc(txs, d);
+  const d = loadData();
+  const bal = calcBalances(d);
+
+  // Hero
+  document.getElementById('hBalance').textContent  = fEur(bal.conto);
+  document.getElementById('hCarta').textContent     = fEur(bal.carta);
+  document.getElementById('hContanti').textContent  = fEur(bal.contanti);
+
+  // QS pills
+  document.getElementById('qsBadgeCarta').textContent    = 'Carta ' + fShortEur(bal.carta);
+  document.getElementById('qsBadgeContanti').textContent = 'Cash '  + fShortEur(bal.contanti);
+
+  const total = d.transactions.length + d.quickSpends.length;
+  document.getElementById('hSub').textContent = total
+    ? `${total} moviment${total===1?'o':'i'} totali`
+    : 'Nessun movimento — premi + per iniziare';
+
+  // KPI
+  document.getElementById('hIncome').textContent   = fShortEur(bal.income);
+  document.getElementById('hOutcome').textContent  = fShortEur(bal.outcome);
+  document.getElementById('hPrelievi').textContent = fShortEur(bal.prelievi);
+
+  // Chart
+  buildGlobalChart(d.transactions);
+
+  // Alloc
+  buildAlloc(d.transactions, d);
+
+  // Feed (merge tx + qs, sort by ts desc, show 12)
   const list = document.getElementById('feedHomeList');
   list.innerHTML = '';
-  const recent = [...txs].sort((a, b) => b.ts - a.ts).slice(0, 8);
-  if (!recent.length) {
+  const allItems = [
+    ...d.transactions.map(t => ({ ...t, _type: 'tx' })),
+    ...d.quickSpends.map(q => ({ ...q, _type: 'qs' }))
+  ].sort((a,b) => b.ts - a.ts).slice(0, 12);
+  if (!allItems.length) {
     list.innerHTML = '<div class="empty"><i class="ti ti-currency-euro"></i>Premi + per registrare il primo movimento</div>';
     return;
   }
-  recent.forEach(tx => list.appendChild(makeTxRow(tx, d)));
+  allItems.forEach(item => {
+    list.appendChild(item._type === 'qs' ? makeQsRow(item) : makeTxRow(item, d));
+  });
 }
 
+// ═══════════════════════════════════════════════════════
+//  GLOBAL CHART
+// ═══════════════════════════════════════════════════════
 function buildGlobalChart(txs) {
-  const c = document.getElementById('cGlobal');
   if (charts.global) { charts.global.destroy(); charts.global = null; }
+  const c = document.getElementById('cGlobal');
   if (!txs.length) return;
-  const sorted = [...txs].sort((a, b) => a.ts - b.ts);
+  const sorted = [...txs].sort((a,b) => a.ts - b.ts);
   let run = 0; const labels = [], vals = [];
   sorted.forEach(t => {
-    run += t.type === 'in' ? t.amount : -t.amount;
-    labels.push(new Date(t.ts).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }));
+    run += t.type==='in' ? t.amount : -t.amount;
+    labels.push(new Date(t.ts).toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit'}));
     vals.push(parseFloat(run.toFixed(2)));
   });
   if (vals.length === 1) { labels.unshift(''); vals.unshift(0); }
-  charts.global = new Chart(c, {
-    type: 'line',
-    data: { labels, datasets: [{ data: vals, borderColor: '#c8a84b', borderWidth: 2, pointRadius: vals.length > 12 ? 0 : 3, pointBackgroundColor: '#c8a84b', fill: true, backgroundColor: 'rgba(200,168,75,0.05)', tension: .4 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fEur(ctx.parsed.y) }, backgroundColor: '#18181b', titleColor: '#9a9a9f', bodyColor: '#f2f2f2', borderColor: '#303036', borderWidth: 1 } }, scales: { x: { ticks: { color: '#55555a', font: { size: 10 }, maxTicksLimit: 5 }, grid: { color: '#111113' } }, y: { ticks: { color: '#55555a', font: { size: 10 }, callback: v => fShort(v) }, grid: { color: '#111113' } } } }
-  });
+  charts.global = lineChart(c, labels, vals, '#c8a84b', 'rgba(200,168,75,0.06)');
 }
 
+// ═══════════════════════════════════════════════════════
+//  ALLOC BARS
+// ═══════════════════════════════════════════════════════
 function buildAlloc(txs, d) {
   const block = document.getElementById('allocBlock');
   if (!txs.length) { block.innerHTML = ''; return; }
   const map = {};
-  d.tags.forEach(t => { const s = calcStats(txs.filter(x => x.tag === t)); if (s.b > 0) map[t] = s.b; });
-  const total = Object.values(map).reduce((a, b) => a + b, 0);
-  if (!total) { block.innerHTML = '<div style="color:var(--t3);font-size:13px;padding:4px 0">Nessun capitale allocato sui tag</div>'; return; }
+  d.tags.forEach(t => {
+    const inAmt = txs.filter(x => x.tag===t && x.type==='in').reduce((s,x)=>s+x.amount,0);
+    const outAmt = txs.filter(x => x.tag===t && x.type==='out').reduce((s,x)=>s+x.amount,0);
+    const b = inAmt - outAmt;
+    if (b > 0) map[t] = b;
+  });
+  const total = Object.values(map).reduce((a,b)=>a+b,0);
+  if (!total) {
+    block.innerHTML = '<div style="color:var(--t3);font-size:13px;padding:4px 0">Nessun capitale allocato nei tag</div>';
+    return;
+  }
   let html = '';
-  Object.entries(map).sort((a, b) => b[1] - a[1]).forEach(([tag, val]) => {
-    const pct = ((val / total) * 100).toFixed(1);
+  Object.entries(map).sort((a,b)=>b[1]-a[1]).forEach(([tag,val]) => {
+    const pct = ((val/total)*100).toFixed(1);
     const col = tColor(tag, d);
     html += `<div class="alloc-item">
       <div class="alloc-top"><span class="alloc-tag" style="color:${col}">${tag}</span><span class="alloc-right">${pct}%  ·  ${fShort(val)}</span></div>
@@ -617,26 +1082,31 @@ function buildAlloc(txs, d) {
   block.innerHTML = html;
 }
 
+// ═══════════════════════════════════════════════════════
+//  TAG PAGE
+// ═══════════════════════════════════════════════════════
 function renderTagList() {
-  const d = load();
+  const d = loadData();
   document.getElementById('tagListView').style.display = '';
   document.getElementById('tagDetailView').style.display = 'none';
   const grid = document.getElementById('tagGrid');
   grid.innerHTML = '';
   if (!d.tags.length) {
-    grid.innerHTML = '<div style="grid-column:span 2" class="empty"><i class="ti ti-tag"></i>Nessun tag creato.<br>Premi il pulsante + in alto.</div>';
+    grid.innerHTML = '<div style="grid-column:span 2" class="empty"><i class="ti ti-tag"></i>Nessun tag.<br>Premi il pulsante + in alto.</div>';
     return;
   }
   d.tags.forEach(tag => {
-    const txs = d.transactions.filter(t => t.tag === tag);
-    const { i, o, b } = calcStats(txs);
+    const txs = d.transactions.filter(t => t.tag===tag);
+    const income  = txs.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
+    const outcome = txs.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
+    const b = income - outcome;
     const col = tColor(tag, d);
-    const roi = i > 0 ? ((b / i - 1) * 100) : null;
-    const roiStr = roi === null ? '—' : (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%';
-    const roiCls = roi === null ? 'neu' : roi >= 0 ? 'pos' : 'neg';
+    const roi = income > 0 ? ((b/income - 1)*100) : null;
+    const roiStr = roi===null ? '—' : (roi>=0?'+':'') + roi.toFixed(1)+'%';
+    const roiCls = roi===null ? 'neu' : roi>=0 ? 'pos' : 'neg';
     const card = document.createElement('div');
     card.className = 'tag-card';
-    card.style.borderColor = col + '44';
+    card.style.borderColor = col+'44';
     card.innerHTML = `<div class="tag-card-name" style="color:${col}">${tag}</div><div class="tag-card-bal">${fEur(b)}</div><div class="tag-card-roi ${roiCls}">ROI ${roiStr}</div>`;
     card.onclick = () => openTagDetail(tag);
     grid.appendChild(card);
@@ -650,29 +1120,31 @@ function renderTagList() {
 }
 
 function openTagDetail(tag) {
-  const d = load();
+  const d = loadData();
   document.getElementById('tagListView').style.display = 'none';
   document.getElementById('tagDetailView').style.display = 'block';
-  const txs = d.transactions.filter(t => t.tag === tag).sort((a, b) => b.ts - a.ts);
-  const { i, o, b } = calcStats(txs);
+  const txs = d.transactions.filter(t => t.tag===tag).sort((a,b)=>b.ts-a.ts);
+  const income  = txs.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
+  const outcome = txs.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
+  const b = income - outcome;
   const col = tColor(tag, d);
-  const roi = i > 0 ? ((b / i - 1) * 100) : null;
+  const roi = income > 0 ? ((b/income-1)*100) : null;
   const hero = document.getElementById('tagDetailHero');
-  hero.style.borderColor = col + '44';
+  hero.style.borderColor = col+'44';
   hero.innerHTML = `
     <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${col};margin-bottom:10px;font-weight:500">${tag}</div>
     <div style="font-size:32px;font-weight:300;letter-spacing:-1px;margin-bottom:12px">${fEur(b)}</div>
     <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
-      <div style="background:var(--s2);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Entrate</div><div style="font-size:14px;color:var(--grn)">${fEur(i)}</div></div>
-      <div style="background:var(--s2);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Uscite</div><div style="font-size:14px;color:var(--red)">${fEur(o)}</div></div>
-      <div style="background:var(--s2);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">ROI</div><div style="font-size:14px;color:${roi === null ? 'var(--t3)' : roi >= 0 ? 'var(--grn)' : 'var(--red)'}">${roi === null ? '—' : (roi >= 0 ? '+' : '') + roi.toFixed(1) + '%'}</div></div>
+      <div style="background:var(--s2);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Entrate</div><div style="font-size:14px;color:var(--grn)">${fEur(income)}</div></div>
+      <div style="background:var(--s2);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Uscite</div><div style="font-size:14px;color:var(--red)">${fEur(outcome)}</div></div>
+      <div style="background:var(--s2);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">ROI</div><div style="font-size:14px;color:${roi===null?'var(--t3)':roi>=0?'var(--grn)':'var(--red)'}">${roi===null?'—':(roi>=0?'+':'')+roi.toFixed(1)+'%'}</div></div>
     </div>`;
   document.getElementById('tagDetailTitle').textContent = 'Movimenti · ' + tag;
   const feed = document.getElementById('tagFeed');
   feed.innerHTML = '';
   if (!txs.length) { feed.innerHTML = `<div class="empty">Nessun movimento per ${tag}</div>`; }
   else txs.forEach(tx => feed.appendChild(makeTxRow(tx, d)));
-  buildTagChart(txs.slice().sort((a, b) => a.ts - b.ts), col);
+  buildTagChart(txs.slice().sort((a,b)=>a.ts-b.ts), col);
 }
 
 function showTagList() {
@@ -685,72 +1157,82 @@ function buildTagChart(txs, col) {
   if (!txs.length) return;
   let run = 0; const labels = [], vals = [];
   txs.forEach(t => {
-    run += t.type === 'in' ? t.amount : -t.amount;
-    labels.push(new Date(t.ts).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }));
+    run += t.type==='in' ? t.amount : -t.amount;
+    labels.push(new Date(t.ts).toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit'}));
     vals.push(parseFloat(run.toFixed(2)));
   });
-  if (vals.length === 1) { labels.unshift(''); vals.unshift(0); }
-  charts.tag = new Chart(document.getElementById('cTag'), {
-    type: 'line',
-    data: { labels, datasets: [{ data: vals, borderColor: col, borderWidth: 2, pointRadius: vals.length > 12 ? 0 : 3, pointBackgroundColor: col, fill: true, backgroundColor: col + '12', tension: .4 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fEur(ctx.parsed.y) }, backgroundColor: '#18181b', bodyColor: '#f2f2f2', borderColor: '#303036', borderWidth: 1 } }, scales: { x: { ticks: { color: '#55555a', font: { size: 10 }, maxTicksLimit: 5 }, grid: { color: '#111113' } }, y: { ticks: { color: '#55555a', font: { size: 10 }, callback: v => fShort(v) }, grid: { color: '#111113' } } } }
-  });
+  if (vals.length===1) { labels.unshift(''); vals.unshift(0); }
+  charts.tag = lineChart(document.getElementById('cTag'), labels, vals, col, col+'12');
 }
 
+// ═══════════════════════════════════════════════════════
+//  CALENDAR
+// ═══════════════════════════════════════════════════════
 function renderCal() {
   const now = new Date();
-  if (!calViewY) { calViewY = now.getFullYear(); calViewM = now.getMonth(); }
-  const d = load();
-  const lbl = new Date(calViewY, calViewM, 1).toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+  if (!calViewY) { calViewY=now.getFullYear(); calViewM=now.getMonth(); }
+  const d = loadData();
+  const lbl = new Date(calViewY, calViewM, 1).toLocaleDateString('it-IT', {month:'long', year:'numeric'});
   document.getElementById('calLabel').textContent = lbl.charAt(0).toUpperCase() + lbl.slice(1);
   const byDay = {};
-  d.transactions.forEach(tx => {
-    const dd = new Date(tx.ts);
-    if (dd.getFullYear() === calViewY && dd.getMonth() === calViewM) {
+  const allItems = [
+    ...d.transactions.map(t => ({ ...t, _type:'tx' })),
+    ...d.quickSpends.map(q => ({ ...q, _type:'qs' }))
+  ];
+  allItems.forEach(item => {
+    const dd = new Date(item.ts);
+    if (dd.getFullYear()===calViewY && dd.getMonth()===calViewM) {
       const k = dd.getDate();
       if (!byDay[k]) byDay[k] = [];
-      byDay[k].push(tx);
+      byDay[k].push(item);
     }
   });
   const grid = document.getElementById('calGrid');
   grid.innerHTML = '';
-  ['L','M','M','G','V','S','D'].forEach(h => { const el = document.createElement('div'); el.className = 'cal-hd'; el.textContent = h; grid.appendChild(el); });
+  ['L','M','M','G','V','S','D'].forEach(h => {
+    const el = document.createElement('div'); el.className='cal-hd'; el.textContent=h; grid.appendChild(el);
+  });
   const first = new Date(calViewY, calViewM, 1);
-  let dow = first.getDay(); dow = dow === 0 ? 6 : dow - 1;
+  let dow = first.getDay(); dow = dow===0 ? 6 : dow-1;
   const prev = new Date(calViewY, calViewM, 0).getDate();
-  for (let i = 0; i < dow; i++) { const el = document.createElement('div'); el.className = 'cal-cell dim'; el.textContent = prev - dow + i + 1; grid.appendChild(el); }
-  const days = new Date(calViewY, calViewM + 1, 0).getDate();
-  for (let dd = 1; dd <= days; dd++) {
-    const el = document.createElement('div'); el.className = 'cal-cell';
-    if (dd === now.getDate() && calViewM === now.getMonth() && calViewY === now.getFullYear()) el.classList.add('today');
+  for (let i=0; i<dow; i++) { const el=document.createElement('div'); el.className='cal-cell dim'; el.textContent=prev-dow+i+1; grid.appendChild(el); }
+  const days = new Date(calViewY, calViewM+1, 0).getDate();
+  for (let dd=1; dd<=days; dd++) {
+    const el = document.createElement('div'); el.className='cal-cell';
+    if (dd===now.getDate() && calViewM===now.getMonth() && calViewY===now.getFullYear()) el.classList.add('today');
     if (byDay[dd]) el.classList.add('has');
-    if (calSelDay === dd) el.classList.add('sel');
+    if (calSelDay===dd) el.classList.add('sel');
     el.textContent = dd;
     const dd2 = dd;
-    el.onclick = () => showCalDay(dd2, byDay[dd2] || [], d);
+    el.onclick = () => showCalDay(dd2, byDay[dd2]||[], d);
     grid.appendChild(el);
   }
-  const rem = (7 - (dow + days) % 7) % 7;
-  for (let i = 1; i <= rem; i++) { const el = document.createElement('div'); el.className = 'cal-cell dim'; el.textContent = i; grid.appendChild(el); }
+  const rem = (7-(dow+days)%7)%7;
+  for (let i=1; i<=rem; i++) { const el=document.createElement('div'); el.className='cal-cell dim'; el.textContent=i; grid.appendChild(el); }
 }
 
-function showCalDay(day, txs, d) {
+function showCalDay(day, items, d) {
   calSelDay = day; renderCal();
   const dt = new Date(calViewY, calViewM, day);
-  document.getElementById('calDayHdr').textContent = dt.toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+  document.getElementById('calDayHdr').textContent = dt.toLocaleDateString('it-IT', {weekday:'long', day:'numeric', month:'long'});
   const feed = document.getElementById('calFeed');
   feed.innerHTML = '';
-  if (!txs.length) { feed.innerHTML = '<div class="empty">Nessun movimento in questo giorno</div>'; return; }
-  txs.sort((a, b) => b.ts - a.ts).forEach(tx => feed.appendChild(makeTxRow(tx, d)));
+  if (!items.length) { feed.innerHTML = '<div class="empty">Nessun movimento in questo giorno</div>'; return; }
+  items.sort((a,b)=>b.ts-a.ts).forEach(item => {
+    feed.appendChild(item._type==='qs' ? makeQsRow(item) : makeTxRow(item, d));
+  });
 }
 
 function calShift(dir) {
   calViewM += dir;
-  if (calViewM < 0) { calViewM = 11; calViewY--; }
-  if (calViewM > 11) { calViewM = 0; calViewY++; }
+  if (calViewM < 0)  { calViewM=11; calViewY--; }
+  if (calViewM > 11) { calViewM=0;  calViewY++; }
   calSelDay = null; renderCal();
 }
 
+// ═══════════════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════════════
 function setPeriod(p, el) {
   statPeriod = p;
   document.querySelectorAll('.ptab').forEach(b => b.classList.remove('on'));
@@ -759,74 +1241,119 @@ function setPeriod(p, el) {
 }
 
 function renderStats() {
-  const d = load(); const now = new Date(); let from = 0;
-  if (statPeriod === 'week') { const f = new Date(now); f.setDate(now.getDate() - 7); from = f.getTime(); }
-  else if (statPeriod === 'month') { from = new Date(now.getFullYear(), now.getMonth(), 1).getTime(); }
-  else if (statPeriod === 'year') { from = new Date(now.getFullYear(), 0, 1).getTime(); }
-  const txs = statPeriod === 'all' ? d.transactions : d.transactions.filter(t => t.ts >= from);
-  const { i, o, b } = calcStats(txs);
-  const inTxs = txs.filter(t => t.type === 'in');
-  const outTxs = txs.filter(t => t.type === 'out');
-  const avgIn = inTxs.length ? i / inTxs.length : 0;
-  const avgOut = outTxs.length ? o / outTxs.length : 0;
-  const roi = i > 0 ? ((b / i - 1) * 100) : null;
+  const d = loadData(); const now = new Date(); let from = 0;
+  if (statPeriod==='week')  { const f=new Date(now); f.setDate(now.getDate()-7); from=f.getTime(); }
+  if (statPeriod==='month') { from=new Date(now.getFullYear(), now.getMonth(), 1).getTime(); }
+  if (statPeriod==='year')  { from=new Date(now.getFullYear(), 0, 1).getTime(); }
+  const filterTx = statPeriod==='all' ? d.transactions : d.transactions.filter(t=>t.ts>=from);
+  const filterQs = statPeriod==='all' ? d.quickSpends  : d.quickSpends.filter(q=>q.ts>=from);
+  const income   = filterTx.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
+  const outcome  = filterTx.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
+  const prelievi = filterTx.filter(t=>t.type==='prel').reduce((s,t)=>s+t.amount,0);
+  const spRapide = filterQs.reduce((s,q)=>s+q.amount,0);
+  const net  = income - outcome - prelievi;
+  const roi  = income > 0 ? ((net/income-1)*100) : null;
   const rows = [
-    ['Entrate totali', fEur(i), 'var(--grn)'],
-    ['Uscite totali', fEur(o), 'var(--red)'],
-    ['Saldo netto', fEur(b), b >= 0 ? 'var(--grn)' : 'var(--red)'],
-    ['Movimenti', txs.length + '', 'var(--t1)'],
-    ['Media per entrata', fEur(avgIn), 'var(--t1)'],
-    ['Media per uscita', fEur(avgOut), 'var(--t1)'],
-    ['ROI periodo', roi === null ? '—' : (roi >= 0 ? '+' : '') + roi.toFixed(2) + '%', roi === null ? 'var(--t2)' : roi >= 0 ? 'var(--grn)' : 'var(--red)'],
+    ['Entrate',             fEur(income),   'var(--grn)'],
+    ['Uscite Conto',        fEur(outcome),  'var(--red)'],
+    ['Prelievi',            fEur(prelievi), 'var(--vio)'],
+    ['Spese Rapide',        fEur(spRapide), 'var(--blu)'],
+    ['Saldo Conto netto',   fEur(net),      net>=0?'var(--grn)':'var(--red)'],
+    ['Movimenti totali',    filterTx.length + filterQs.length + '', 'var(--t1)'],
+    ['ROI periodo',         roi===null?'—':(roi>=0?'+':'')+roi.toFixed(2)+'%', roi===null?'var(--t2)':roi>=0?'var(--grn)':'var(--red)'],
   ];
   const bl = document.getElementById('statsBlock'); bl.innerHTML = '';
-  rows.forEach(([lbl, val, col]) => {
+  rows.forEach(([lbl,val,col]) => {
     bl.innerHTML += `<div class="stat-row"><span class="stat-lbl">${lbl}</span><span class="stat-val" style="color:${col}">${val}</span></div>`;
   });
-  buildStatsChart(txs);
+  buildStatsChart(filterTx);
 }
 
 function buildStatsChart(txs) {
   if (charts.stats) { charts.stats.destroy(); charts.stats = null; }
   if (!txs.length) return;
-  const sorted = [...txs].sort((a, b) => a.ts - b.ts);
+  const sorted = [...txs].sort((a,b)=>a.ts-b.ts);
   let run = 0; const labels = [], vals = [];
   sorted.forEach(t => {
-    run += t.type === 'in' ? t.amount : -t.amount;
-    labels.push(new Date(t.ts).toLocaleDateString('it-IT', { day: '2-digit', month: '2-digit' }));
+    run += t.type==='in' ? t.amount : -t.amount;
+    labels.push(new Date(t.ts).toLocaleDateString('it-IT', {day:'2-digit', month:'2-digit'}));
     vals.push(parseFloat(run.toFixed(2)));
   });
-  if (vals.length === 1) { labels.unshift(''); vals.unshift(0); }
-  charts.stats = new Chart(document.getElementById('cStats'), {
+  if (vals.length===1) { labels.unshift(''); vals.unshift(0); }
+  charts.stats = lineChart(document.getElementById('cStats'), labels, vals, '#5b8dee', 'rgba(91,141,238,0.05)');
+}
+
+// ═══════════════════════════════════════════════════════
+//  CHART FACTORY
+// ═══════════════════════════════════════════════════════
+function lineChart(canvas, labels, vals, color, fillColor) {
+  return new Chart(canvas, {
     type: 'line',
-    data: { labels, datasets: [{ data: vals, borderColor: '#5b8dee', borderWidth: 2, pointRadius: vals.length > 12 ? 0 : 3, pointBackgroundColor: '#5b8dee', fill: true, backgroundColor: 'rgba(91,141,238,0.05)', tension: .4 }] },
-    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => fEur(ctx.parsed.y) }, backgroundColor: '#18181b', bodyColor: '#f2f2f2', borderColor: '#303036', borderWidth: 1 } }, scales: { x: { ticks: { color: '#55555a', font: { size: 10 }, maxTicksLimit: 5 }, grid: { color: '#111113' } }, y: { ticks: { color: '#55555a', font: { size: 10 }, callback: v => fShort(v) }, grid: { color: '#111113' } } } }
+    data: { labels, datasets: [{ data:vals, borderColor:color, borderWidth:2, pointRadius:vals.length>12?0:3, pointBackgroundColor:color, fill:true, backgroundColor:fillColor, tension:.4 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display:false },
+        tooltip: {
+          callbacks: { label: ctx => fEur(ctx.parsed.y) },
+          backgroundColor:'#18181b', titleColor:'#9a9a9f', bodyColor:'#f2f2f2', borderColor:'#2a2a30', borderWidth:1
+        }
+      },
+      scales: {
+        x: { ticks:{ color:'#55555a', font:{size:10}, maxTicksLimit:5 }, grid:{ color:'#111113' } },
+        y: { ticks:{ color:'#55555a', font:{size:10}, callback: v=>fShortEur(v) }, grid:{ color:'#111113' } }
+      }
+    }
   });
 }
 
+// ═══════════════════════════════════════════════════════
+//  EXPORT / RESET
+// ═══════════════════════════════════════════════════════
 function exportData() {
-  const d = load();
-  const blob = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' });
+  const d = loadData();
+  const blob = new Blob([JSON.stringify(d, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'finance-hub-export.json'; a.click();
+  const a = document.createElement('a'); a.href=url; a.download='finance-hub-export.json'; a.click();
   URL.revokeObjectURL(url);
 }
 
 function confirmReset() {
   if (confirm('Eliminare TUTTI i dati? Questa azione è irreversibile.')) {
-    localStorage.removeItem(DB);
-    renderHome();
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
-    document.querySelectorAll('.nav-it').forEach(n => n.classList.remove('on'));
+    localStorage.removeItem(DB_KEY);
+    qsSrc = null;
+    document.getElementById('qsBtnCarta').className    = 'qs-src-btn';
+    document.getElementById('qsBtnContanti').className = 'qs-src-btn';
+    document.getElementById('qsAmt').value = '';
+    document.getElementById('qsNote').value = '';
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+    document.querySelectorAll('.nav-it').forEach(n=>n.classList.remove('on'));
     document.getElementById('pgHome').classList.add('on');
     document.getElementById('nHome').classList.add('on');
+    renderHome();
   }
 }
 
+// ═══════════════════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════════════════
+function shake(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  shakeEl(el);
+}
+function shakeEl(el) {
+  el.style.borderColor = 'var(--red)';
+  el.style.transition  = 'border-color .1s';
+  setTimeout(() => { el.style.borderColor=''; el.style.transition=''; }, 1200);
+}
+
+// Close overlay on backdrop tap
 document.querySelectorAll('.overlay').forEach(el => {
-  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('on'); });
+  el.addEventListener('click', e => { if (e.target===el) el.classList.remove('on'); });
 });
 
+// ── INIT ──
 renderHome();
 </script>
 </body>
