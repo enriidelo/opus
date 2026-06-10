@@ -1,0 +1,8 @@
+{
+  "name": "finance-hub",
+  "version": "1.0.0",
+  "description": "Finance Hub PWA with Notion backend",
+  "dependencies": {
+    "@notionhq/client": "^2.2.15"
+  }
+}
