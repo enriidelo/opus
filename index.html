@@ -529,18 +529,6 @@
     .add-success-icon i { font-size: 36px; color: var(--grn); }
     @keyframes popIn { from{transform:scale(0)} to{transform:scale(1)} }
     .add-success-label { font-size: 17px; color: var(--t2); font-weight: 400; }
-
-    /* ── SYNC INDICATOR ── */
-    .sync-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      display: inline-block; margin-left: 6px;
-      transition: background .3s, box-shadow .3s;
-    }
-    .sync-dot.idle    { background: var(--t3); }
-    .sync-dot.syncing { background: var(--gold); box-shadow: 0 0 6px var(--gold); animation: pulse .8s ease-in-out infinite; }
-    .sync-dot.ok      { background: var(--grn); box-shadow: 0 0 6px var(--grn); }
-    .sync-dot.error   { background: var(--red); box-shadow: 0 0 6px var(--red); }
-    @keyframes pulse  { 0%,100%{opacity:.5} 50%{opacity:1} }
   </style>
 </head>
 <body>
@@ -698,7 +686,7 @@
   <!-- ── PAGE: HOME ── -->
   <div class="page on" id="pgHome">
     <div class="hero">
-      <div class="hero-eyebrow">Conto Centrale<span class="sync-dot idle" id="syncDot" title="Sync Notion"></span></div>
+      <div class="hero-eyebrow">Conto Centrale</div>
       <div class="hero-main-balance" id="hBalance">€ 0,00</div>
       <div class="hero-sub" id="hSub">Nessun movimento</div>
       <div class="wallet-strip">
@@ -795,10 +783,6 @@
     <div class="chart-card"><div class="chart-wrap"><canvas id="cStats"></canvas></div></div>
     <div class="sec"><div class="sec-hdr">Impostazioni</div></div>
     <div style="padding:0 18px 28px">
-      <div class="stat-row" style="cursor:pointer" onclick="manualSync()">
-        <span class="stat-lbl">Sincronizza con Notion</span>
-        <span style="color:var(--t3);font-size:20px"><i class="ti ti-refresh"></i></span>
-      </div>
       <div class="stat-row" style="cursor:pointer" onclick="openAddTag()">
         <span class="stat-lbl">Gestisci tag</span>
         <span style="color:var(--t3);font-size:20px"><i class="ti ti-tag"></i></span>
@@ -1360,194 +1344,6 @@ document.querySelectorAll('.overlay').forEach(el=>{ el.addEventListener('click',
 
 
 // ═══════════════════════════════════════════════════════
-//  NOTION SYNC LAYER
-// ═══════════════════════════════════════════════════════
-// La PWA usa localStorage come fonte di verità locale.
-// Notion è il backend remoto — sync asincrono, non blocca la UI.
-// Strategia: write-through (ogni modifica → Notion in background)
-//            + pull all'avvio (Notion sovrascrive localStorage se più recente)
-
-const API_BASE = ''; // vuoto = stesso dominio Vercel (es. finance-hub.vercel.app)
-let syncInProgress = false;
-let pendingSync = false;
-
-// Mostra indicatore sync nella UI
-function setSyncIndicator(state) {
-  const el = document.getElementById('syncDot');
-  if (!el) return;
-  el.className = 'sync-dot ' + state; // idle | syncing | ok | error
-}
-
-// ── PULL: scarica tutto da Notion e aggiorna localStorage ──
-async function pullFromNotion() {
-  try {
-    setSyncIndicator('syncing');
-    const res = await fetch(API_BASE + '/api/read', { method: 'GET' });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const { ok, data } = await res.json();
-    if (!ok || !data) throw new Error('Bad response');
-
-    // Merge intelligente: usa Notion come fonte di verità,
-    // ma preserva dati locali più recenti non ancora sincronizzati
-    const local = loadData();
-    const localTsSet = new Set(local.transactions.map(t => t.ts));
-    const localQsSet = new Set(local.quickSpends.map(q => q.ts));
-
-    // Aggiungi record remoti che non esistono in locale
-    const newTx = data.transactions.filter(t => !localTsSet.has(t.ts));
-    const newQs = data.quickSpends.filter(q => !localQsSet.has(q.ts));
-
-    if (newTx.length || newQs.length || data.tags.length) {
-      const merged = {
-        transactions: [...local.transactions, ...newTx].sort((a,b) => a.ts - b.ts),
-        quickSpends:  [...local.quickSpends,  ...newQs].sort((a,b) => a.ts - b.ts),
-        tags: [...new Set([...local.tags, ...data.tags])],
-        tColors: { ...local.tColors, ...data.tColors },
-      };
-      saveData(merged);
-      renderAll();
-    }
-
-    localStorage.setItem('fh3_lastPull', new Date().toISOString());
-    setSyncIndicator('ok');
-    setTimeout(() => setSyncIndicator('idle'), 2000);
-    return true;
-  } catch(err) {
-    console.warn('[pull]', err.message);
-    setSyncIndicator('error');
-    setTimeout(() => setSyncIndicator('idle'), 3000);
-    return false;
-  }
-}
-
-// ── PUSH singolo record su Notion (fire-and-forget) ──
-async function pushToNotion(collection, action, data) {
-  try {
-    setSyncIndicator('syncing');
-    const res = await fetch(API_BASE + '/api/write', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ collection, action, data }),
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const result = await res.json();
-    if (!result.ok) throw new Error(result.error);
-    setSyncIndicator('ok');
-    setTimeout(() => setSyncIndicator('idle'), 1500);
-  } catch(err) {
-    console.warn('[push]', collection, action, err.message);
-    setSyncIndicator('error');
-    setTimeout(() => setSyncIndicator('idle'), 3000);
-    // Non bloccare la UI — i dati sono già in localStorage
-  }
-}
-
-// ── BULK SYNC: invia tutto localStorage → Notion ──
-async function bulkSyncToNotion() {
-  if (syncInProgress) { pendingSync = true; return; }
-  syncInProgress = true;
-  try {
-    setSyncIndicator('syncing');
-    const d = loadData();
-    const res = await fetch(API_BASE + '/api/sync', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ transactions: d.transactions, quickSpends: d.quickSpends, tags: d.tags, tColors: d.tColors }),
-    });
-    if (!res.ok) throw new Error('HTTP ' + res.status);
-    const result = await res.json();
-    console.log('[bulkSync]', result.results);
-    setSyncIndicator('ok');
-    setTimeout(() => setSyncIndicator('idle'), 2000);
-  } catch(err) {
-    console.warn('[bulkSync]', err.message);
-    setSyncIndicator('error');
-    setTimeout(() => setSyncIndicator('idle'), 3000);
-  } finally {
-    syncInProgress = false;
-    if (pendingSync) { pendingSync = false; bulkSyncToNotion(); }
-  }
-}
-
-// ── Wrap delle funzioni di modifica per aggiungere sync ──
-// Intercetta submitTx, submitQs, saveEdit, saveEditQs, confirmDel, doAddTag
-const _submitTx_orig = submitTx;
-submitTx = function() {
-  const before = loadData().transactions.length;
-  _submitTx_orig();
-  const after = loadData().transactions.length;
-  if (after > before) {
-    const tx = loadData().transactions[after - 1];
-    pushToNotion('tx', 'create', tx);
-  }
-};
-
-const _submitQs_orig = submitQs;
-submitQs = function() {
-  const before = loadData().quickSpends.length;
-  _submitQs_orig();
-  const after = loadData().quickSpends.length;
-  if (after > before) {
-    const qs = loadData().quickSpends[after - 1];
-    pushToNotion('qs', 'create', qs);
-  }
-};
-
-const _saveEdit_orig = saveEdit;
-saveEdit = function() {
-  _saveEdit_orig();
-  const tx = loadData().transactions.find(t => t.id === editId);
-  if (tx) pushToNotion('tx', 'update', tx);
-};
-
-const _saveEditQs_orig = saveEditQs;
-saveEditQs = function() {
-  _saveEditQs_orig();
-  const qs = loadData().quickSpends.find(q => q.id === editQsId);
-  if (qs) pushToNotion('qs', 'update', qs);
-};
-
-const _confirmDel_orig = confirmDel;
-confirmDel = function() {
-  const d = loadData();
-  const itemToDelete = delType === 'qs'
-    ? d.quickSpends.find(q => q.id === delId)
-    : d.transactions.find(t => t.id === delId);
-  _confirmDel_orig();
-  if (itemToDelete) pushToNotion(delType === 'qs' ? 'qs' : 'tx', 'delete', itemToDelete);
-};
-
-const _doAddTag_orig = doAddTag;
-doAddTag = function() {
-  const before = loadData().tags.length;
-  _doAddTag_orig();
-  const d = loadData();
-  if (d.tags.length > before) {
-    const newTag = d.tags[d.tags.length - 1];
-    pushToNotion('tag', 'create', { name: newTag, color: d.tColors[newTag] || '#c8a84b' });
-  }
-};
-
-// Wrap anche addConfirm (modalità #add)
-const _addConfirm_orig = addConfirm;
-addConfirm = function() {
-  const before = loadData().quickSpends.length;
-  _addConfirm_orig();
-  // Il save avviene dentro addConfirm prima di window.close()
-  // Usiamo un piccolo delay per leggere il dato salvato
-  setTimeout(() => {
-    const d = loadData();
-    if (d.quickSpends.length > before) {
-      const qs = d.quickSpends[d.quickSpends.length - 1];
-      pushToNotion('qs', 'create', qs);
-    }
-  }, 50);
-};
-
-
-function manualSync() { pullFromNotion(); bulkSyncToNotion(); }
-
-// ═══════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════
 if (IS_ADD_MODE) {
@@ -1562,8 +1358,6 @@ if (IS_ADD_MODE) {
     document.getElementById('shell').classList.add('visible');
     setTimeout(()=>{ document.getElementById('splash').style.display='none'; }, 360);
     renderHome();
-    // Pull da Notion dopo che la UI è visibile
-    setTimeout(() => pullFromNotion(), 300);
   }, 1400);
 }
 </script>
