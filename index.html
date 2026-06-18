@@ -853,6 +853,11 @@
         <span class="stat-lbl">Esporta dati (JSON)</span>
         <span style="color:var(--t3);font-size:20px"><i class="ti ti-download"></i></span>
       </div>
+      <div class="stat-row" style="cursor:pointer" onclick="document.getElementById('importFileInput').click()">
+        <span class="stat-lbl">Importa dati (JSON)</span>
+        <span style="color:var(--t3);font-size:20px"><i class="ti ti-upload"></i></span>
+      </div>
+      <input type="file" id="importFileInput" accept=".json,application/json" style="display:none" onchange="importData(event)" />
       <div class="stat-row" style="cursor:pointer" onclick="confirmReset()">
         <span class="stat-lbl" style="color:var(--red)">Reset completo</span>
         <span style="color:var(--red);font-size:20px"><i class="ti ti-trash"></i></span>
@@ -1485,6 +1490,30 @@ function exportData(){
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');a.href=url;a.download='finance-hub-export.json';a.click();URL.revokeObjectURL(url);
 }
+function importData(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const parsed=JSON.parse(ev.target.result);
+      // Validazione minima
+      if(typeof parsed!=='object'||parsed===null) throw new Error('Formato non valido');
+      const required=['tags','transactions'];
+      for(const k of required) if(!(k in parsed)) throw new Error(`Campo mancante: ${k}`);
+      if(!confirm(`Importare i dati?\nQuesto sovrascriverà tutto (${parsed.transactions?.length||0} transazioni, ${parsed.tags?.length||0} tag).\n\nSuggerimento: esporta prima un backup.`)){
+        e.target.value=''; return;
+      }
+      localStorage.setItem(DB_KEY, JSON.stringify(parsed));
+      e.target.value='';
+      alert('Importazione completata. L\'app verrà ricaricata.');
+      location.reload();
+    }catch(err){
+      alert('Errore nel file JSON: '+err.message);
+      e.target.value='';
+    }
+  };
+  reader.readAsText(file);
+}
 function confirmReset(){
   if(confirm('Eliminare TUTTI i dati? Irreversibile.')){
     localStorage.removeItem(DB_KEY); qsSrc=null;
@@ -1747,6 +1776,17 @@ if (IS_ADD_MODE) {
     renderHome();
   }, 1400);
 }
+  // Service Worker — aggiornamento automatico
+  if('serviceWorker' in navigator){
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      reg.addEventListener('updatefound',()=>{
+        const w=reg.installing;
+        w.addEventListener('statechange',()=>{
+          if(w.state==='installed'&&navigator.serviceWorker.controller){
+            if(confirm('Nuova versione disponibile. Ricaricare ora?')) location.reload();
+          }
+        });
+      });
+    });
+  }
 </script>
-</body>
-</html>
