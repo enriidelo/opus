@@ -551,6 +551,36 @@
     .add-success-icon i { font-size: 36px; color: var(--grn); }
     @keyframes popIn { from{transform:scale(0)} to{transform:scale(1)} }
     .add-success-label { font-size: 17px; color: var(--t2); font-weight: 400; }
+
+    /* ─────────────────────────────────────────
+       CICLI DI INVESTIMENTO
+    ───────────────────────────────────────── */
+    .cicli-section { padding: 0 18px 18px; }
+    .cicli-hdr { font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center; }
+    .ciclo-row { background:var(--s1);border:0.5px solid var(--br);border-radius:var(--r2);padding:14px 16px;margin-bottom:8px;animation:ain .25s ease; }
+    .ciclo-top { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px; }
+    .ciclo-id { font-size:10px;letter-spacing:1.5px;color:var(--t3);text-transform:uppercase; }
+    .ciclo-date { font-size:10px;color:var(--t3); }
+    .ciclo-nums { display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px; }
+    .ciclo-num { background:var(--s2);border-radius:8px;padding:9px; }
+    .ciclo-num-lbl { font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--t3);margin-bottom:3px; }
+    .ciclo-num-val { font-size:14px;font-weight:500; }
+    .ciclo-actions { display:flex;gap:6px; }
+    .ciclo-btn {
+      flex:1;padding:9px 0;border-radius:var(--r3);border:0.5px solid var(--br2);
+      background:transparent;color:var(--t2);font-size:11px;font-weight:500;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;
+      letter-spacing:.3px;transition:all .15s;font-family:inherit;
+    }
+    .ciclo-btn i { font-size:15px; }
+    .ciclo-btn.add-cost-btn { border-color:var(--blu3,#3a4f7a);color:var(--blu); }
+    .ciclo-btn.add-cost-btn:active { background:var(--blu2); }
+    .ciclo-btn.close-btn { border-color:var(--grn3,#1a3d2b);color:var(--grn); }
+    .ciclo-btn.close-btn:active { background:var(--grn2); }
+    .ciclo-status-badge { font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;font-weight:600; }
+    .badge-attivo { background:var(--blu2);color:var(--blu); }
+    .badge-completato { background:var(--grn2);color:var(--grn); }
+    .ciclo-profit-final { font-size:12px;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--br); }
   </style>
 </head>
 <body>
@@ -773,6 +803,16 @@
       <div style="padding:0 18px">
         <div class="tag-card" id="tagDetailHero" style="cursor:default;margin-bottom:16px"></div>
         <div class="chart-card" style="margin:0 0 16px"><div class="chart-wrap"><canvas id="cTag"></canvas></div></div>
+        <!-- CICLI DI INVESTIMENTO -->
+        <div class="cicli-section" id="cicliSection">
+          <div class="cicli-hdr">
+            <span>Cicli di Investimento</span>
+            <button onclick="openNewCiclo()" style="background:var(--goldbg);border:0.5px solid var(--gold3);color:var(--gold);border-radius:20px;padding:6px 13px;font-size:11px;cursor:pointer;letter-spacing:.5px;display:flex;align-items:center;gap:4px;font-family:inherit"><i class="ti ti-plus" style="font-size:13px"></i>Ciclo</button>
+          </div>
+          <div id="cicliAttivi"></div>
+          <div id="cicliStorico"></div>
+        </div>
+
         <div class="sec-hdr" id="tagDetailTitle" style="margin-bottom:12px">Movimenti</div>
         <div class="tx-list" id="tagFeed"></div>
       </div>
@@ -820,6 +860,45 @@
     </div>
   </div>
 
+  <!-- OVERLAY: NUOVO CICLO -->
+  <div class="overlay" id="newCicloSheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Avvia Ciclo</div>
+      <div id="newCicloTagLabel" style="text-align:center;font-size:12px;color:var(--t3);margin-bottom:18px;letter-spacing:1px;text-transform:uppercase"></div>
+      <div class="fi"><div class="fl">Costo iniziale €</div><input class="fin" id="ncInitCost" type="number" inputmode="decimal" placeholder="0,00" /></div>
+      <div class="fi"><div class="fl">Ricavo stimato €</div><input class="fin" id="ncEstRev" type="number" inputmode="decimal" placeholder="0,00" /></div>
+      <div id="ncProfitPreview" style="text-align:center;font-size:13px;color:var(--t3);margin-bottom:16px"></div>
+      <button class="cta" onclick="doNewCiclo()">Avvia Ciclo</button>
+      <button class="cta sec-cta" onclick="closeSheet('newCicloSheet')">Annulla</button>
+    </div>
+  </div>
+
+  <!-- OVERLAY: AGGIUNGI COSTO -->
+  <div class="overlay" id="addCostSheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Aggiungi Costo</div>
+      <div class="fi"><div class="fl">Importo €</div><input class="fin" id="acAmount" type="number" inputmode="decimal" placeholder="0,00" /></div>
+      <div class="fi"><div class="fl">Nota</div><input class="fin" id="acNote" type="text" placeholder="Spedizione, riparazioni..." /></div>
+      <button class="cta" onclick="doAddCostoCiclo()">Aggiungi</button>
+      <button class="cta sec-cta" onclick="closeSheet('addCostSheet')">Annulla</button>
+    </div>
+  </div>
+
+  <!-- OVERLAY: CHIUDI CICLO -->
+  <div class="overlay" id="closeCicloSheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Chiudi Ciclo</div>
+      <div id="closeCicloSummary" style="font-size:12px;color:var(--t2);text-align:center;margin-bottom:18px;line-height:1.7"></div>
+      <div class="fi"><div class="fl">Ricavo finale €</div><input class="fin" id="ccFinalRev" type="number" inputmode="decimal" placeholder="0,00" /></div>
+      <div id="ccProfitPreview" style="text-align:center;font-size:13px;color:var(--t3);margin-bottom:16px"></div>
+      <button class="cta" style="background:var(--grn);color:#fff" onclick="doCloseCiclo()">Chiudi &amp; Registra Entrata</button>
+      <button class="cta sec-cta" onclick="closeSheet('closeCicloSheet')">Annulla</button>
+    </div>
+  </div>
+
   <!-- NAV BAR -->
   <nav class="nav-bar">
     <div class="nav-it on" id="nHome"  onclick="goPage('pgHome','nHome')">  <i class="ti ti-home"></i>      <span>Home</span></div>
@@ -844,8 +923,8 @@ const DB_KEY = 'fh3';
 function loadData() {
   try {
     const d = JSON.parse(localStorage.getItem(DB_KEY) || '{}');
-    return { tags: d.tags||[], tColors: d.tColors||{}, transactions: d.transactions||[], quickSpends: d.quickSpends||[] };
-  } catch(e) { return { tags:[], tColors:{}, transactions:[], quickSpends:[] }; }
+    return { tags: d.tags||[], tColors: d.tColors||{}, transactions: d.transactions||[], quickSpends: d.quickSpends||[], cycles: d.cycles||[] };
+  } catch(e) { return { tags:[], tColors:{}, transactions:[], quickSpends:[], cycles:[] }; }
 }
 function saveData(d) { localStorage.setItem(DB_KEY, JSON.stringify(d)); }
 
@@ -1240,39 +1319,86 @@ function renderTagList(){
     const income=txs.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
     const outcome=txs.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
     const b=income-outcome; const col=tColor(tag,d);
-    const roi=income>0?((b/income-1)*100):null;
-    const roiStr=roi===null?'\u2014':(roi>=0?'+':'')+roi.toFixed(1)+'%';
+    const roi=outcome>0?((income-outcome)/outcome*100):null;
+    const roiStr=roi===null?'—':(roi>=0?'+':'')+roi.toFixed(1)+'%';
     const roiCls=roi===null?'neu':roi>=0?'pos':'neg';
     const card=document.createElement('div'); card.className='tag-card'; card.style.borderColor=col+'44';
-    card.innerHTML=`<div class="tag-card-name" style="color:${col}">${tag}</div><div class="tag-card-bal">${fEur(b)}</div><div class="tag-card-roi ${roiCls}">ROI ${roiStr}</div>`;
-    card.onclick=()=>openTagDetail(tag); grid.appendChild(card);
+    card.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <div class="tag-card-name" style="color:${col};margin-bottom:0">${tag}</div>
+        <button onclick="event.stopPropagation();deleteTag('${tag}')" style="background:none;border:none;color:var(--t3);cursor:pointer;padding:2px 4px;font-size:16px;line-height:1"><i class="ti ti-trash"></i></button>
+      </div>
+      <div class="tag-card-bal">${fEur(b)}</div>
+      <div class="tag-card-roi ${roiCls}">ROI ${roiStr}</div>`;
+    card.addEventListener('click', e => {
+      if(e.target.closest('button')) return;
+      openTagDetail(tag);
+    });
+    grid.appendChild(card);
   });
   const add=document.createElement('div'); add.className='tag-card';
   add.style.cssText='border:0.5px dashed var(--br2);display:flex;align-items:center;justify-content:center;color:var(--t3);font-size:24px;min-height:100px';
   add.innerHTML='<i class="ti ti-plus"></i>'; add.onclick=openAddTag; grid.appendChild(add);
 }
-function openTagDetail(tag){
+function openTagDetail(tag,showTx){
+  _currentTagDetail=tag;
+  if(showTx===undefined)showTx=10;
   const d=loadData();
   document.getElementById('tagListView').style.display='none'; document.getElementById('tagDetailView').style.display='block';
+  renderCicli(tag,d);
   const txs=d.transactions.filter(t=>t.tag===tag).sort((a,b)=>b.ts-a.ts);
   const income=txs.filter(t=>t.type==='in').reduce((s,t)=>s+t.amount,0);
   const outcome=txs.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
-  const b=income-outcome; const col=tColor(tag,d); const roi=income>0?((b/income-1)*100):null;
+  const b=income-outcome; const col=tColor(tag,d);
+  const roi=outcome>0?((income-outcome)/outcome*100):null;
+  const roiStr=roi===null?'—':(roi>=0?'+':'')+roi.toFixed(1)+'%';
+  const roiCol=roi===null?'var(--t3)':roi>=0?'var(--grn)':'var(--red)';
   const hero=document.getElementById('tagDetailHero'); hero.style.borderColor=col+'44';
-  hero.innerHTML=`<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${col};margin-bottom:10px;font-weight:500">${tag}</div>
+  hero.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${col};font-weight:500">${tag}</div>
+      <button onclick="deleteTag('${tag}')" style="background:none;border:none;color:var(--t3);cursor:pointer;padding:4px;font-size:18px;line-height:1"><i class="ti ti-trash"></i></button>
+    </div>
     <div style="font-size:32px;font-weight:300;letter-spacing:-1px;margin-bottom:12px">${fEur(b)}</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
       <div style="background:var(--s2);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Entrate</div><div style="font-size:14px;color:var(--grn)">${fEur(income)}</div></div>
       <div style="background:var(--s2);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Uscite</div><div style="font-size:14px;color:var(--red)">${fEur(outcome)}</div></div>
-      <div style="background:var(--s2);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">ROI</div><div style="font-size:14px;color:${roi===null?'var(--t3)':roi>=0?'var(--grn)':'var(--red)'}">${roi===null?'\u2014':(roi>=0?'+':'')+roi.toFixed(1)+'%'}</div></div>
+      <div style="background:var(--s2);border-radius:8px;padding:10px"><div style="font-size:10px;color:var(--t3);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">ROI</div><div style="font-size:14px;color:${roiCol}">${roiStr}</div></div>
     </div>`;
   document.getElementById('tagDetailTitle').textContent='Movimenti · '+tag;
   const feed=document.getElementById('tagFeed'); feed.innerHTML='';
-  if(!txs.length)feed.innerHTML=`<div class="empty">Nessun movimento per ${tag}</div>`;
-  else txs.forEach(tx=>feed.appendChild(makeTxRow(tx,d)));
+  if(!txs.length) feed.innerHTML=`<div class="empty">Nessun movimento per ${tag}</div>`;
+  else {
+    txs.slice(0,showTx).forEach(tx=>feed.appendChild(makeTxRow(tx,d)));
+    if(txs.length>showTx){
+      const btn=document.createElement('button');
+      btn.className='cta sec-cta'; btn.style.margin='8px 18px 0';
+      btn.textContent=`Mostra altri (${txs.length-showTx})`;
+      btn.onclick=()=>openTagDetail(tag,showTx+10);
+      feed.appendChild(btn);
+    }
+  }
   buildTagChart(txs.slice().sort((a,b)=>a.ts-b.ts),col);
 }
 function showTagList(){ document.getElementById('tagListView').style.display=''; document.getElementById('tagDetailView').style.display='none'; }
+
+function deleteTag(tag){
+  if(!confirm(`Eliminare il tag "${tag}"?\nVerranno rimossi anche tutti i cicli associati.\nLe transazioni resteranno ma perderanno il tag.`)) return;
+  const d=loadData();
+  // Rimuove il tag dalla lista
+  d.tags=d.tags.filter(t=>t!==tag);
+  // Rimuove il colore associato
+  if(d.tColors) delete d.tColors[tag];
+  // Le transazioni restano ma si sganciano dal tag
+  d.transactions.forEach(tx=>{ if(tx.tag===tag) tx.tag=null; });
+  // Rimuove cicli e relativi eventi calendario
+  const cycleIds=(d.cycles||[]).filter(c=>c.tag===tag).map(c=>c.id);
+  d.cycles=(d.cycles||[]).filter(c=>c.tag!==tag);
+  if(d.calEvents) d.calEvents=d.calEvents.filter(e=>!cycleIds.includes(e.cycleId));
+  saveData(d);
+  showTagList();
+  renderTagList();
+}
 
 // ═══════════════════════════════════════════════════════
 //  CALENDAR
@@ -1285,6 +1411,18 @@ function renderCal(){
   const byDay={};
   [...d.transactions.map(t=>({...t,_type:'tx'})),...d.quickSpends.map(q=>({...q,_type:'qs'}))].forEach(item=>{
     const dd=new Date(item.ts); if(dd.getFullYear()===calViewY&&dd.getMonth()===calViewM){const k=dd.getDate();if(!byDay[k])byDay[k]=[];byDay[k].push(item);}
+  });
+  // Cicli: marca ogni giorno compreso tra startDate e endDate
+  (d.calEvents||[]).forEach(ev=>{
+    const start=new Date(ev.startDate); const end=new Date(ev.endDate||ev.startDate);
+    for(let dt=new Date(start);dt<=end;dt.setDate(dt.getDate()+1)){
+      if(dt.getFullYear()===calViewY&&dt.getMonth()===calViewM){
+        const k=dt.getDate(); if(!byDay[k])byDay[k]=[];
+        // evita duplicati ciclo
+        if(!byDay[k].find(x=>x._type==='ciclo'&&x.cycleId===ev.cycleId))
+          byDay[k].push({...ev,_type:'ciclo'});
+      }
+    }
   });
   const grid=document.getElementById('calGrid'); grid.innerHTML='';
   ['L','M','M','G','V','S','D'].forEach(h=>{const el=document.createElement('div');el.className='cal-hd';el.textContent=h;grid.appendChild(el);});
@@ -1326,7 +1464,7 @@ function renderStats(){
   const outcome=fTx.filter(t=>t.type==='out').reduce((s,t)=>s+t.amount,0);
   const prelievi=fTx.filter(t=>t.type==='prel').reduce((s,t)=>s+t.amount,0);
   const spRapide=fQs.reduce((s,q)=>s+q.amount,0);
-  const net=income-outcome-prelievi; const roi=income>0?((net/income-1)*100):null;
+  const net=income-outcome-prelievi; const totalOut=outcome+prelievi; const roi=totalOut>0?((income-totalOut)/totalOut*100):null;
   const rows=[
     ['Entrate',fEur(income),'var(--grn)'],['Uscite Conto',fEur(outcome),'var(--red)'],
     ['Prelievi',fEur(prelievi),'var(--vio)'],['Spese Rapide',fEur(spRapide),'var(--blu)'],
@@ -1358,6 +1496,226 @@ function confirmReset(){
     renderHome();
   }
 }
+
+// ═══════════════════════════════════════════════════════
+//  CICLI DI INVESTIMENTO
+// ═══════════════════════════════════════════════════════
+let _cicloTag=null, _cicloId=null;
+
+function openNewCiclo(){
+  _cicloTag=_currentTagDetail;
+  document.getElementById('newCicloTagLabel').textContent=_cicloTag||'';
+  document.getElementById('ncInitCost').value='';
+  document.getElementById('ncEstRev').value='';
+  document.getElementById('ncProfitPreview').textContent='';
+  document.getElementById('newCicloSheet').classList.add('on');
+  setTimeout(()=>document.getElementById('ncInitCost').focus(),350);
+  // live preview profit
+  ['ncInitCost','ncEstRev'].forEach(id=>{
+    document.getElementById(id).oninput=()=>{
+      const c=parseFloat(document.getElementById('ncInitCost').value)||0;
+      const r=parseFloat(document.getElementById('ncEstRev').value)||0;
+      const p=r-c;
+      const el=document.getElementById('ncProfitPreview');
+      if(c&&r){el.textContent='Profitto stimato: '+fEur(p);el.style.color=p>=0?'var(--grn)':'var(--red)';}
+      else el.textContent='';
+    };
+  });
+}
+
+function doNewCiclo(){
+  const cost=parseFloat(document.getElementById('ncInitCost').value);
+  const est=parseFloat(document.getElementById('ncEstRev').value);
+  if(!cost||cost<=0){shake('ncInitCost');return;}
+  if(!est||est<=0){shake('ncEstRev');return;}
+  const d=loadData();
+  const id=Date.now();
+  const today=new Date().toISOString().slice(0,10);
+  d.cycles.push({id,tag:_cicloTag,status:'ATTIVO',startDate:today,endDate:null,initialCost:cost,additionalCosts:0,estimatedRevenue:est,estimatedProfit:est-cost,finalRevenue:null});
+  // Costo iniziale → uscita immediata
+  d.transactions.push({
+    id:id+1,type:'out',amount:cost,
+    tag:_cicloTag||null,
+    note:`Investimento iniziale · ${_cicloTag||''}`,
+    ts:Date.now(),dest:null
+  });
+  saveData(d);
+  closeSheet('newCicloSheet');
+  renderCicli(_cicloTag,d);
+  renderAll();
+  _saveCicloCalEvent(id,_cicloTag,today,null,d);
+}
+
+function openAddCosto(cicloId){
+  _cicloId=cicloId;
+  document.getElementById('acAmount').value='';
+  document.getElementById('acNote').value='';
+  document.getElementById('addCostSheet').classList.add('on');
+  setTimeout(()=>document.getElementById('acAmount').focus(),350);
+}
+
+function doAddCostoCiclo(){
+  const amt=parseFloat(document.getElementById('acAmount').value);
+  if(!amt||amt<=0){shake('acAmount');return;}
+  const note=document.getElementById('acNote').value.trim();
+  const d=loadData();
+  const c=d.cycles.find(c=>c.id===_cicloId); if(!c)return;
+  c.additionalCosts=(c.additionalCosts||0)+amt;
+  c.estimatedProfit=c.estimatedRevenue-(c.initialCost+c.additionalCosts);
+  // Registra come USCITA nel wallet corrente
+  d.transactions.push({
+    id:Date.now(),type:'out',amount:amt,
+    tag:c.tag||null,
+    note:`${note||'Costo ciclo'} · ${c.tag||''}`,
+    ts:Date.now(),dest:null
+  });
+  saveData(d);
+  closeSheet('addCostSheet');
+  renderCicli(c.tag,d);
+  renderAll();
+}
+
+function openCloseCiclo(cicloId){
+  _cicloId=cicloId;
+  const d=loadData(); const c=d.cycles.find(x=>x.id===_cicloId); if(!c)return;
+  const totalCosts=c.initialCost+c.additionalCosts;
+  document.getElementById('closeCicloSummary').innerHTML=
+    `Costo totale: <b>${fEur(totalCosts)}</b>&nbsp;&nbsp;·&nbsp;&nbsp;Ricavo stimato: <b>${fEur(c.estimatedRevenue)}</b>`;
+  // Pre-imposta il ricavo stimato come valore di default
+  document.getElementById('ccFinalRev').value=c.estimatedRevenue;
+  const calcPreview=()=>{
+    const r=parseFloat(document.getElementById('ccFinalRev').value)||0;
+    const p=r-totalCosts;
+    const roi=totalCosts>0?(p/totalCosts*100):0;
+    const el=document.getElementById('ccProfitPreview');
+    el.innerHTML=`Profitto netto: <b style="color:${p>=0?'var(--grn)':'var(--red)'}">${p>=0?'+':''}${fEur(p)}</b>&nbsp;&nbsp;ROI: <b style="color:${roi>=0?'var(--grn)':'var(--red)'}">${roi>=0?'+':''}${roi.toFixed(1)}%</b>`;
+  };
+  calcPreview();
+  document.getElementById('ccFinalRev').oninput=calcPreview;
+  document.getElementById('closeCicloSheet').classList.add('on');
+  setTimeout(()=>{ const el=document.getElementById('ccFinalRev'); el.focus(); el.select(); },350);
+}
+
+function doCloseCiclo(){
+  const finalRev=parseFloat(document.getElementById('ccFinalRev').value);
+  if(!finalRev||finalRev<=0){shake('ccFinalRev');return;}
+  const d=loadData(); const c=d.cycles.find(x=>x.id===_cicloId); if(!c)return;
+  const today=new Date().toISOString().slice(0,10);
+  const totalCosts=c.initialCost+c.additionalCosts;
+  const netEntry=finalRev-totalCosts;
+  c.status='COMPLETATO'; c.finalRevenue=finalRev; c.endDate=today;
+  // Il costo iniziale è già stato speso all'avvio — registra solo la differenza netta
+  // Se netEntry > 0: entrata (profitto). Se < 0: ulteriore uscita (perdita).
+  d.transactions.push({
+    id:Date.now(),type:netEntry>=0?'in':'out',amount:Math.abs(netEntry),
+    tag:c.tag||null,
+    note:`Ciclo ${c.startDate} chiuso · ${c.tag||''}`,
+    ts:Date.now(),dest:null
+  });
+  saveData(d);
+  closeSheet('closeCicloSheet');
+  renderCicli(c.tag,d);
+  renderAll();
+  _saveCicloCalEvent(c.id,c.tag,c.startDate,today,d);
+}
+
+function deleteCiclo(cicloId){
+  if(!confirm('Eliminare questo ciclo?')) return;
+  const d=loadData();
+  const c=d.cycles.find(x=>x.id===cicloId);
+  d.cycles=d.cycles.filter(x=>x.id!==cicloId);
+  if(d.calEvents) d.calEvents=d.calEvents.filter(e=>e.cycleId!==cicloId);
+  saveData(d);
+  if(c) renderCicli(c.tag,d);
+}
+
+function _saveCicloCalEvent(id,tag,startDate,endDate,d){
+  if(!d.calEvents) d.calEvents=[];
+  const existing=d.calEvents.findIndex(e=>e.cycleId===id);
+  const ev={cycleId:id,title:`${tag||'TAG'} · ${startDate}`,startDate,endDate:endDate||startDate};
+  if(existing>-1) d.calEvents[existing]=ev; else d.calEvents.push(ev);
+  saveData(d);
+}
+
+const CICLI_PAGE=5; // quanti mostrare per volta
+function renderCicli(tag,d,showAttivi,showStorico){
+  if(!d)d=loadData();
+  if(showAttivi===undefined)showAttivi=999;
+  if(showStorico===undefined)showStorico=CICLI_PAGE;
+  const tagCycles=d.cycles.filter(c=>c.tag===tag);
+  const attivi=tagCycles.filter(c=>c.status==='ATTIVO');
+  const completati=tagCycles.filter(c=>c.status==='COMPLETATO').sort((a,b)=>b.id-a.id);
+  const attiviEl=document.getElementById('cicliAttivi');
+  const storicoEl=document.getElementById('cicliStorico');
+  if(!attiviEl)return;
+
+  attiviEl.innerHTML='';
+  if(!attivi.length){
+    attiviEl.innerHTML='<div style="font-size:12px;color:var(--t3);margin-bottom:16px;text-align:center;padding:12px 0">Nessun ciclo attivo</div>';
+  } else {
+    attivi.slice(0,showAttivi).forEach(c=>{
+      const totalCosts=c.initialCost+c.additionalCosts;
+      attiviEl.appendChild(_makeCicloRow(c,totalCosts,true));
+    });
+  }
+
+  storicoEl.innerHTML='';
+  if(completati.length){
+    const hdr=document.createElement('div');
+    hdr.style.cssText='font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-bottom:10px;margin-top:4px';
+    hdr.textContent='Storico completati';
+    storicoEl.appendChild(hdr);
+    completati.slice(0,showStorico).forEach(c=>{
+      const totalCosts=c.initialCost+c.additionalCosts;
+      storicoEl.appendChild(_makeCicloRow(c,totalCosts,false));
+    });
+    if(completati.length>showStorico){
+      const btn=document.createElement('button');
+      btn.className='cta sec-cta'; btn.style.marginTop='8px';
+      btn.textContent=`Mostra altri (${completati.length-showStorico})`;
+      btn.onclick=()=>renderCicli(tag,loadData(),showAttivi,showStorico+CICLI_PAGE);
+      storicoEl.appendChild(btn);
+    }
+  }
+}
+
+function _makeCicloRow(c,totalCosts,isActive){
+  const div=document.createElement('div'); div.className='ciclo-row';
+  if(!isActive) div.style.opacity='.75';
+  const profit=isActive?c.estimatedProfit:(c.finalRevenue-totalCosts);
+  const roi=totalCosts>0?(profit/totalCosts*100):0;
+  const profitCol=profit>=0?'var(--grn)':'var(--red)';
+  const profitSign=profit>=0?'+':'';
+  const roiSign=roi>=0?'+':'';
+  const label=`CICLO ${c.startDate}`;
+  div.innerHTML=`
+    <div class="ciclo-top">
+      <div>
+        <div class="ciclo-id">${label}</div>
+        ${!isActive?`<div class="ciclo-date">${c.startDate} → ${c.endDate}</div>`:''}
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span class="ciclo-status-badge ${isActive?'badge-attivo':'badge-completato'}">${c.status}</span>
+        <button onclick="deleteCiclo(${c.id})" style="background:none;border:none;color:var(--t3);cursor:pointer;padding:2px 4px;line-height:1;font-size:16px" title="Elimina"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>
+    <div class="ciclo-nums">
+      <div class="ciclo-num"><div class="ciclo-num-lbl">Costo</div><div class="ciclo-num-val" style="color:var(--red)">${fEur(totalCosts)}</div></div>
+      <div class="ciclo-num"><div class="ciclo-num-lbl">${isActive?'Stim.':'Finale'}</div><div class="ciclo-num-val" style="color:var(--grn)">${fEur(isActive?c.estimatedRevenue:c.finalRevenue)}</div></div>
+      <div class="ciclo-num"><div class="ciclo-num-lbl">Profitto</div><div class="ciclo-num-val" style="color:${profitCol}">${profitSign}${fEur(profit)}</div></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;align-items:center;font-size:11px;color:${profitCol};margin-bottom:${isActive?'10px':'0'};font-weight:500;letter-spacing:.3px">
+      ROI ${roiSign}${roi.toFixed(1)}%
+    </div>
+    ${isActive?`<div class="ciclo-actions">
+      <button class="ciclo-btn add-cost-btn" onclick="openAddCosto(${c.id})"><i class="ti ti-plus"></i>Costo</button>
+      <button class="ciclo-btn close-btn"    onclick="openCloseCiclo(${c.id})"><i class="ti ti-check"></i>Chiudi</button>
+    </div>`:''}`;
+  return div;
+}
+
+// track current tag in detail view
+let _currentTagDetail=null;
 
 // ═══════════════════════════════════════════════════════
 //  UTILS
