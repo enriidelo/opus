@@ -581,6 +581,15 @@
     .badge-attivo { background:var(--blu2);color:var(--blu); }
     .badge-completato { background:var(--grn2);color:var(--grn); }
     .ciclo-profit-final { font-size:12px;margin-top:8px;padding-top:8px;border-top:0.5px solid var(--br); }
+
+    /* ─── SHOW MORE ─── */
+    .show-more-btn {
+      width:100%;margin-top:2px;padding:12px;
+      background:none;border:0.5px dashed var(--br2);border-radius:var(--r2);
+      color:var(--t3);font-size:12px;font-family:inherit;cursor:pointer;
+      letter-spacing:.5px;transition:color .15s,border-color .15s;
+    }
+    .show-more-btn:active { color:var(--t2);border-color:var(--t3); }
   </style>
 </head>
 <body>
@@ -1262,9 +1271,18 @@ function renderHome(){
   buildAlloc(d.transactions,d);
   const list=document.getElementById('feedHomeList'); list.innerHTML='';
   const all=[...d.transactions.map(t=>({...t,_type:'tx'}))]
-    .concat(d.quickSpends.map(q=>({...q,_type:'qs'}))).sort((a,b)=>b.ts-a.ts).slice(0,12);
+    .concat(d.quickSpends.map(q=>({...q,_type:'qs'}))).sort((a,b)=>b.ts-a.ts);
   if(!all.length){list.innerHTML='<div class="empty"><i class="ti ti-currency-euro"></i>Nessun movimento ancora</div>';return;}
-  all.forEach(item=>list.appendChild(item._type==='qs'?makeQsRow(item):makeTxRow(item,d)));
+  const showN=renderHome._show||10;
+  all.slice(0,showN).forEach(item=>list.appendChild(item._type==='qs'?makeQsRow(item):makeTxRow(item,d)));
+  if(all.length>showN){
+    const btn=document.createElement('button');
+    btn.className='show-more-btn';
+    const rem=all.length-showN;
+    btn.textContent=`Mostra altri ${Math.min(10,rem)} · ${rem} rimanenti`;
+    btn.onclick=()=>{ renderHome._show=(renderHome._show||10)+10; renderHome(); };
+    list.appendChild(btn);
+  } else { renderHome._show=10; }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1377,8 +1395,9 @@ function openTagDetail(tag,showTx){
     txs.slice(0,showTx).forEach(tx=>feed.appendChild(makeTxRow(tx,d)));
     if(txs.length>showTx){
       const btn=document.createElement('button');
-      btn.className='cta sec-cta'; btn.style.margin='8px 18px 0';
-      btn.textContent=`Mostra altri (${txs.length-showTx})`;
+      btn.className='show-more-btn';
+      const rem=txs.length-showTx;
+      btn.textContent=`Mostra altri ${Math.min(10,rem)} · ${rem} rimanenti`;
       btn.onclick=()=>openTagDetail(tag,showTx+10);
       feed.appendChild(btn);
     }
@@ -1450,7 +1469,26 @@ function showCalDay(day,items,d){
   document.getElementById('calDayHdr').textContent=dt.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});
   const feed=document.getElementById('calFeed'); feed.innerHTML='';
   if(!items.length){feed.innerHTML='<div class="empty">Nessun movimento</div>';return;}
-  items.sort((a,b)=>b.ts-a.ts).forEach(item=>feed.appendChild(item._type==='qs'?makeQsRow(item):makeTxRow(item,d)));
+  const sorted=items.filter(i=>i._type!=='ciclo').sort((a,b)=>b.ts-a.ts);
+  const cicli=items.filter(i=>i._type==='ciclo');
+  const all=[...sorted,...cicli];
+  const showN=showCalDay._show||10;
+  all.slice(0,showN).forEach(item=>{
+    if(item._type==='ciclo'){
+      const div=document.createElement('div'); div.className='tx-row';
+      div.innerHTML=`<div class="tx-icon" style="background:var(--goldbg)"><i class="ti ti-refresh" style="color:var(--gold)"></i></div><div class="tx-body"><div class="tx-note">${item.title}</div><div class="tx-meta">${item.startDate}${item.endDate&&item.endDate!==item.startDate?' → '+item.endDate:''}</div></div>`;
+      feed.appendChild(div);
+    } else {
+      feed.appendChild(item._type==='qs'?makeQsRow(item):makeTxRow(item,d));
+    }
+  });
+  if(all.length>showN){
+    const btn=document.createElement('button');
+    btn.className='show-more-btn';
+    btn.textContent=`Mostra altri ${Math.min(10,all.length-showN)} · ${all.length-showN} rimanenti`;
+    btn.onclick=()=>{ showCalDay._show=(showCalDay._show||10)+10; showCalDay(day,items,d); };
+    feed.appendChild(btn);
+  } else { showCalDay._show=10; }
 }
 function calShift(dir){ calViewM+=dir; if(calViewM<0){calViewM=11;calViewY--;}if(calViewM>11){calViewM=0;calViewY++;}calSelDay=null;renderCal(); }
 
@@ -1700,8 +1738,9 @@ function renderCicli(tag,d,showAttivi,showStorico){
     });
     if(completati.length>showStorico){
       const btn=document.createElement('button');
-      btn.className='cta sec-cta'; btn.style.marginTop='8px';
-      btn.textContent=`Mostra altri (${completati.length-showStorico})`;
+      btn.className='show-more-btn';
+      const rem=completati.length-showStorico;
+      btn.textContent=`Mostra altri ${Math.min(CICLI_PAGE,rem)} · ${rem} rimanenti`;
       btn.onclick=()=>renderCicli(tag,loadData(),showAttivi,showStorico+CICLI_PAGE);
       storicoEl.appendChild(btn);
     }
