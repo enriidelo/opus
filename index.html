@@ -575,8 +575,10 @@
     .ciclo-btn i { font-size:15px; }
     .ciclo-btn.add-cost-btn { border-color:var(--blu3,#3a4f7a);color:var(--blu); }
     .ciclo-btn.add-cost-btn:active { background:var(--blu2); }
-    .ciclo-btn.close-btn { border-color:var(--grn3,#1a3d2b);color:var(--grn); }
-    .ciclo-btn.close-btn:active { background:var(--grn2); }
+    .ciclo-btn.add-rev-btn { border-color:var(--grn3,#1a3d2b);color:var(--grn); }
+    .ciclo-btn.add-rev-btn:active { background:var(--grn2); }
+    .ciclo-btn.close-btn { border-color:var(--br2);color:var(--t2); }
+    .ciclo-btn.close-btn:active { background:var(--s2); }
     .ciclo-status-badge { font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:4px;font-weight:600; }
     .badge-attivo { background:var(--blu2);color:var(--blu); }
     .badge-completato { background:var(--grn2);color:var(--grn); }
@@ -590,6 +592,20 @@
       letter-spacing:.5px;transition:color .15s,border-color .15s;
     }
     .show-more-btn:active { color:var(--t2);border-color:var(--t3); }
+
+    /* ─── MINIMAL TOGGLE SWITCH ─── */
+    .mtoggle { position:relative;width:32px;height:18px;flex-shrink:0; }
+    .mtoggle input { opacity:0;width:0;height:0;position:absolute; }
+    .mtoggle-track {
+      position:absolute;inset:0;background:var(--s2);border:0.5px solid var(--br2);
+      border-radius:10px;cursor:pointer;transition:background .2s,border-color .2s;
+    }
+    .mtoggle-track::after {
+      content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;
+      background:var(--t3);border-radius:50%;transition:transform .2s,background .2s;
+    }
+    .mtoggle input:checked + .mtoggle-track { background:var(--goldbg);border-color:var(--gold3,#5a4a28); }
+    .mtoggle input:checked + .mtoggle-track::after { transform:translateX(14px);background:var(--gold); }
   </style>
 </head>
 <body>
@@ -881,7 +897,19 @@
       <div class="sheet-title">Avvia Ciclo</div>
       <div id="newCicloTagLabel" style="text-align:center;font-size:12px;color:var(--t3);margin-bottom:18px;letter-spacing:1px;text-transform:uppercase"></div>
       <div class="fi"><div class="fl">Costo iniziale €</div><input class="fin" id="ncInitCost" type="number" inputmode="decimal" placeholder="0,00" /></div>
-      <div class="fi"><div class="fl">Ricavo stimato €</div><input class="fin" id="ncEstRev" type="number" inputmode="decimal" placeholder="0,00" /></div>
+      <div class="fi">
+        <div class="fl" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span>Ricavo stimato €</span>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span id="ncSospesoLbl" style="font-size:11px;color:var(--t3);font-weight:400;text-transform:none;letter-spacing:0">Non lo so</span>
+            <label class="mtoggle">
+              <input type="checkbox" id="ncSospeso" onchange="toggleNcSospeso()" />
+              <div class="mtoggle-track"></div>
+            </label>
+          </div>
+        </div>
+        <input class="fin" id="ncEstRev" type="number" inputmode="decimal" placeholder="0,00" />
+      </div>
       <div id="ncProfitPreview" style="text-align:center;font-size:13px;color:var(--t3);margin-bottom:16px"></div>
       <button class="cta" onclick="doNewCiclo()">Avvia Ciclo</button>
       <button class="cta sec-cta" onclick="closeSheet('newCicloSheet')">Annulla</button>
@@ -900,15 +928,25 @@
     </div>
   </div>
 
+  <!-- OVERLAY: AGGIUNGI RICAVO -->
+  <div class="overlay" id="addRevSheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Aggiungi Ricavo</div>
+      <div class="fi"><div class="fl">Importo incassato €</div><input class="fin" id="arAmount" type="number" inputmode="decimal" placeholder="0,00" /></div>
+      <div class="fi"><div class="fl">Nota</div><input class="fin" id="arNote" type="text" placeholder="Vendita pezzo, acconto..." /></div>
+      <button class="cta" style="background:var(--grn);color:#fff" onclick="doAddRevCiclo()">Registra Entrata</button>
+      <button class="cta sec-cta" onclick="closeSheet('addRevSheet')">Annulla</button>
+    </div>
+  </div>
+
   <!-- OVERLAY: CHIUDI CICLO -->
   <div class="overlay" id="closeCicloSheet">
     <div class="sheet">
       <div class="sheet-handle"></div>
       <div class="sheet-title">Chiudi Ciclo</div>
       <div id="closeCicloSummary" style="font-size:12px;color:var(--t2);text-align:center;margin-bottom:18px;line-height:1.7"></div>
-      <div class="fi"><div class="fl">Ricavo finale €</div><input class="fin" id="ccFinalRev" type="number" inputmode="decimal" placeholder="0,00" /></div>
-      <div id="ccProfitPreview" style="text-align:center;font-size:13px;color:var(--t3);margin-bottom:16px"></div>
-      <button class="cta" style="background:var(--grn);color:#fff" onclick="doCloseCiclo()">Chiudi &amp; Registra Entrata</button>
+      <button class="cta" style="background:var(--grn);color:#fff" onclick="doCloseCiclo()">Segna come Completato</button>
       <button class="cta sec-cta" onclick="closeSheet('closeCicloSheet')">Annulla</button>
     </div>
   </div>
@@ -937,7 +975,8 @@ const DB_KEY = 'fh3';
 function loadData() {
   try {
     const d = JSON.parse(localStorage.getItem(DB_KEY) || '{}');
-    return { tags: d.tags||[], tColors: d.tColors||{}, transactions: d.transactions||[], quickSpends: d.quickSpends||[], cycles: d.cycles||[] };
+    const cycles = (d.cycles||[]).map(c=>({collectedRevenue:0,...c}));
+    return { tags: d.tags||[], tColors: d.tColors||{}, transactions: d.transactions||[], quickSpends: d.quickSpends||[], cycles };
   } catch(e) { return { tags:[], tColors:{}, transactions:[], quickSpends:[], cycles:[] }; }
 }
 function saveData(d) { localStorage.setItem(DB_KEY, JSON.stringify(d)); }
@@ -1574,31 +1613,49 @@ function openNewCiclo(){
   document.getElementById('newCicloTagLabel').textContent=_cicloTag||'';
   document.getElementById('ncInitCost').value='';
   document.getElementById('ncEstRev').value='';
+  document.getElementById('ncSospeso').checked=false;
+  document.getElementById('ncSospesoLbl').textContent='Non lo so';
+  document.getElementById('ncEstRev').disabled=false;
+  document.getElementById('ncEstRev').style.opacity='1';
   document.getElementById('ncProfitPreview').textContent='';
   document.getElementById('newCicloSheet').classList.add('on');
   setTimeout(()=>document.getElementById('ncInitCost').focus(),350);
-  // live preview profit
   ['ncInitCost','ncEstRev'].forEach(id=>{
     document.getElementById(id).oninput=()=>{
       const c=parseFloat(document.getElementById('ncInitCost').value)||0;
       const r=parseFloat(document.getElementById('ncEstRev').value)||0;
       const p=r-c;
       const el=document.getElementById('ncProfitPreview');
-      if(c&&r){el.textContent='Profitto stimato: '+fEur(p);el.style.color=p>=0?'var(--grn)':'var(--red)';}
+      if(c&&r&&!document.getElementById('ncSospeso').checked){el.textContent='Profitto stimato: '+fEur(p);el.style.color=p>=0?'var(--grn)':'var(--red)';}
       else el.textContent='';
     };
   });
 }
 
+function toggleNcSospeso(){
+  const sospeso=document.getElementById('ncSospeso').checked;
+  const estInput=document.getElementById('ncEstRev');
+  estInput.disabled=sospeso;
+  estInput.style.opacity=sospeso?'.4':'1';
+  document.getElementById('ncSospesoLbl').textContent=sospeso?'In sospeso':'Non lo so';
+  if(sospeso){ estInput.value=''; document.getElementById('ncProfitPreview').textContent=''; }
+}
+
 function doNewCiclo(){
   const cost=parseFloat(document.getElementById('ncInitCost').value);
-  const est=parseFloat(document.getElementById('ncEstRev').value);
+  const sospeso=document.getElementById('ncSospeso').checked;
+  const est=sospeso?null:parseFloat(document.getElementById('ncEstRev').value);
   if(!cost||cost<=0){shake('ncInitCost');return;}
-  if(!est||est<=0){shake('ncEstRev');return;}
+  if(!sospeso&&(!est||est<=0)){shake('ncEstRev');return;}
   const d=loadData();
   const id=Date.now();
   const today=new Date().toISOString().slice(0,10);
-  d.cycles.push({id,tag:_cicloTag,status:'ATTIVO',startDate:today,endDate:null,initialCost:cost,additionalCosts:0,estimatedRevenue:est,estimatedProfit:est-cost,finalRevenue:null});
+  d.cycles.push({
+    id,tag:_cicloTag,status:'ATTIVO',startDate:today,endDate:null,
+    initialCost:cost,additionalCosts:0,
+    estimatedRevenue:est,estimatedProfit:est!==null?est-cost:null,
+    collectedRevenue:0,finalRevenue:null
+  });
   // Costo iniziale → uscita immediata
   d.transactions.push({
     id:id+1,type:'out',amount:cost,
@@ -1628,7 +1685,7 @@ function doAddCostoCiclo(){
   const d=loadData();
   const c=d.cycles.find(c=>c.id===_cicloId); if(!c)return;
   c.additionalCosts=(c.additionalCosts||0)+amt;
-  c.estimatedProfit=c.estimatedRevenue-(c.initialCost+c.additionalCosts);
+  if(c.estimatedRevenue!==null) c.estimatedProfit=c.estimatedRevenue-(c.initialCost+c.additionalCosts);
   // Registra come USCITA nel wallet corrente
   d.transactions.push({
     id:Date.now(),type:'out',amount:amt,
@@ -1642,43 +1699,53 @@ function doAddCostoCiclo(){
   renderAll();
 }
 
+function openAddRev(cicloId){
+  _cicloId=cicloId;
+  document.getElementById('arAmount').value='';
+  document.getElementById('arNote').value='';
+  document.getElementById('addRevSheet').classList.add('on');
+  setTimeout(()=>document.getElementById('arAmount').focus(),350);
+}
+
+function doAddRevCiclo(){
+  const amt=parseFloat(document.getElementById('arAmount').value);
+  if(!amt||amt<=0){shake('arAmount');return;}
+  const note=document.getElementById('arNote').value.trim();
+  const d=loadData();
+  const c=d.cycles.find(c=>c.id===_cicloId); if(!c)return;
+  c.collectedRevenue=(c.collectedRevenue||0)+amt;
+  // Registra come ENTRATA nel wallet corrente — ricavo reale, non stimato
+  d.transactions.push({
+    id:Date.now(),type:'in',amount:amt,
+    tag:c.tag||null,
+    note:`${note||'Ricavo ciclo'} · ${c.tag||''}`,
+    ts:Date.now(),dest:null
+  });
+  saveData(d);
+  closeSheet('addRevSheet');
+  renderCicli(c.tag,d);
+  renderAll();
+}
+
 function openCloseCiclo(cicloId){
   _cicloId=cicloId;
   const d=loadData(); const c=d.cycles.find(x=>x.id===_cicloId); if(!c)return;
   const totalCosts=c.initialCost+c.additionalCosts;
+  const collected=c.collectedRevenue||0;
+  const profit=collected-totalCosts;
+  const roi=totalCosts>0?(profit/totalCosts*100):0;
   document.getElementById('closeCicloSummary').innerHTML=
-    `Costo totale: <b>${fEur(totalCosts)}</b>&nbsp;&nbsp;·&nbsp;&nbsp;Ricavo stimato: <b>${fEur(c.estimatedRevenue)}</b>`;
-  // Pre-imposta il ricavo stimato come valore di default
-  document.getElementById('ccFinalRev').value=c.estimatedRevenue;
-  const calcPreview=()=>{
-    const r=parseFloat(document.getElementById('ccFinalRev').value)||0;
-    const p=r-totalCosts;
-    const roi=totalCosts>0?(p/totalCosts*100):0;
-    const el=document.getElementById('ccProfitPreview');
-    el.innerHTML=`Profitto netto: <b style="color:${p>=0?'var(--grn)':'var(--red)'}">${p>=0?'+':''}${fEur(p)}</b>&nbsp;&nbsp;ROI: <b style="color:${roi>=0?'var(--grn)':'var(--red)'}">${roi>=0?'+':''}${roi.toFixed(1)}%</b>`;
-  };
-  calcPreview();
-  document.getElementById('ccFinalRev').oninput=calcPreview;
+    `Costo totale: <b>${fEur(totalCosts)}</b><br>Ricavi incassati: <b>${fEur(collected)}</b><br><br>
+     Profitto netto: <b style="color:${profit>=0?'var(--grn)':'var(--red)'}">${profit>=0?'+':''}${fEur(profit)}</b>&nbsp;&nbsp;
+     ROI: <b style="color:${roi>=0?'var(--grn)':'var(--red)'}">${roi>=0?'+':''}${roi.toFixed(1)}%</b><br><br>
+     <span style="color:var(--t3);font-size:11px">Il ciclo verrà segnato come completato. Nessuna nuova transazione verrà generata: i ricavi sono già stati registrati man mano.</span>`;
   document.getElementById('closeCicloSheet').classList.add('on');
-  setTimeout(()=>{ const el=document.getElementById('ccFinalRev'); el.focus(); el.select(); },350);
 }
 
 function doCloseCiclo(){
-  const finalRev=parseFloat(document.getElementById('ccFinalRev').value);
-  if(!finalRev||finalRev<=0){shake('ccFinalRev');return;}
   const d=loadData(); const c=d.cycles.find(x=>x.id===_cicloId); if(!c)return;
   const today=new Date().toISOString().slice(0,10);
-  const totalCosts=c.initialCost+c.additionalCosts;
-  const netEntry=finalRev-totalCosts;
-  c.status='COMPLETATO'; c.finalRevenue=finalRev; c.endDate=today;
-  // Il costo iniziale è già stato speso all'avvio — registra solo la differenza netta
-  // Se netEntry > 0: entrata (profitto). Se < 0: ulteriore uscita (perdita).
-  d.transactions.push({
-    id:Date.now(),type:netEntry>=0?'in':'out',amount:Math.abs(netEntry),
-    tag:c.tag||null,
-    note:`Ciclo ${c.startDate} chiuso · ${c.tag||''}`,
-    ts:Date.now(),dest:null
-  });
+  c.status='COMPLETATO'; c.endDate=today; c.finalRevenue=c.collectedRevenue||0;
   saveData(d);
   closeSheet('closeCicloSheet');
   renderCicli(c.tag,d);
@@ -1750,16 +1817,24 @@ function renderCicli(tag,d,showAttivi,showStorico){
 function _makeCicloRow(c,totalCosts,isActive){
   const div=document.createElement('div'); div.className='ciclo-row';
   if(!isActive) div.style.opacity='.75';
-  const profit=isActive?c.estimatedProfit:(c.finalRevenue-totalCosts);
+  const collected=c.collectedRevenue||0;
+  const hasEst=c.estimatedRevenue!==null&&c.estimatedRevenue!==undefined;
+  // Profitto: se attivo usa l'incassato reale meno costi; se completato usa finalRevenue
+  const revForProfit=isActive?collected:c.finalRevenue;
+  const profit=revForProfit-totalCosts;
   const roi=totalCosts>0?(profit/totalCosts*100):0;
   const profitCol=profit>=0?'var(--grn)':'var(--red)';
   const profitSign=profit>=0?'+':'';
   const roiSign=roi>=0?'+':'';
   const label=`CICLO ${c.startDate}`;
+  const revLabel=isActive?'Incassato':'Finale';
+  const revValue=isActive?collected:c.finalRevenue;
+  const estBadge=isActive&&hasEst?`<span style="font-size:9px;color:var(--t3);margin-left:6px">stima ${fEur(c.estimatedRevenue)}</span>`:'';
+  const sospesoBadge=isActive&&!hasEst?`<span class="ciclo-status-badge" style="background:var(--s2);color:var(--t3);margin-left:6px">IN SOSPESO</span>`:'';
   div.innerHTML=`
     <div class="ciclo-top">
       <div>
-        <div class="ciclo-id">${label}</div>
+        <div class="ciclo-id">${label}${sospesoBadge}</div>
         ${!isActive?`<div class="ciclo-date">${c.startDate} → ${c.endDate}</div>`:''}
       </div>
       <div style="display:flex;align-items:center;gap:6px">
@@ -1769,14 +1844,15 @@ function _makeCicloRow(c,totalCosts,isActive){
     </div>
     <div class="ciclo-nums">
       <div class="ciclo-num"><div class="ciclo-num-lbl">Costo</div><div class="ciclo-num-val" style="color:var(--red)">${fEur(totalCosts)}</div></div>
-      <div class="ciclo-num"><div class="ciclo-num-lbl">${isActive?'Stim.':'Finale'}</div><div class="ciclo-num-val" style="color:var(--grn)">${fEur(isActive?c.estimatedRevenue:c.finalRevenue)}</div></div>
+      <div class="ciclo-num"><div class="ciclo-num-lbl">${revLabel}${estBadge}</div><div class="ciclo-num-val" style="color:var(--grn)">${fEur(revValue)}</div></div>
       <div class="ciclo-num"><div class="ciclo-num-lbl">Profitto</div><div class="ciclo-num-val" style="color:${profitCol}">${profitSign}${fEur(profit)}</div></div>
     </div>
     <div style="display:flex;justify-content:flex-end;align-items:center;font-size:11px;color:${profitCol};margin-bottom:${isActive?'10px':'0'};font-weight:500;letter-spacing:.3px">
       ROI ${roiSign}${roi.toFixed(1)}%
     </div>
     ${isActive?`<div class="ciclo-actions">
-      <button class="ciclo-btn add-cost-btn" onclick="openAddCosto(${c.id})"><i class="ti ti-plus"></i>Costo</button>
+      <button class="ciclo-btn add-cost-btn" onclick="openAddCosto(${c.id})"><i class="ti ti-minus"></i>Costo</button>
+      <button class="ciclo-btn add-rev-btn"  onclick="openAddRev(${c.id})"><i class="ti ti-plus"></i>Ricavo</button>
       <button class="ciclo-btn close-btn"    onclick="openCloseCiclo(${c.id})"><i class="ti ti-check"></i>Chiudi</button>
     </div>`:''}`;
   return div;
