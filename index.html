@@ -137,7 +137,7 @@
     .kpi-val.g{color:var(--grn)} .kpi-val.r{color:var(--red)} .kpi-val.v{color:var(--vio)}
 
     /* ─────────────────────────────────────────
-       QUICK SPEND WIDGET (in-page)
+       QUICK ADD WIDGET (in-page)
     ───────────────────────────────────────── */
     .qs-widget {
       margin: 14px 18px 0;
@@ -153,10 +153,6 @@
       color: var(--t3); font-weight: 500; display: flex; align-items: center; gap: 6px;
     }
     .qs-title i { font-size: 14px; }
-    .qs-balances { display: flex; gap: 8px; }
-    .qs-bal-pill { font-size: 10px; padding: 3px 8px; border-radius: 20px; font-weight: 500; }
-    .qs-bal-pill.carta    { background: var(--blu2); color: var(--blu); }
-    .qs-bal-pill.contanti { background: var(--grn2); color: var(--grn); }
     .qs-body { padding: 12px 14px; }
     .qs-source-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
     .qs-src-btn {
@@ -166,8 +162,8 @@
       transition: all .15s;
     }
     .qs-src-btn i { font-size: 16px; }
-    .qs-src-btn.carta-sel    { border-color: var(--blu); color: var(--blu); background: var(--blu2); }
-    .qs-src-btn.contanti-sel { border-color: var(--grn); color: var(--grn); background: var(--grn2); }
+    .qs-src-btn.in-sel  { border-color: var(--grn); color: var(--grn); background: var(--grn2); }
+    .qs-src-btn.out-sel { border-color: var(--red); color: var(--red); background: var(--red2); }
     .qs-input-row { display: flex; gap: 8px; align-items: center; }
     .qs-amt-wrap { position: relative; flex: 1; }
     .qs-amt-prefix {
@@ -181,6 +177,7 @@
     }
     .qs-amt:focus { border-color: var(--br3); }
     .qs-amt::placeholder { color: var(--t3); font-size: 15px; }
+    .qs-tagrow { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
     .qs-note {
       width: 100%; background: var(--s2); border: 0.5px solid var(--br2);
       border-radius: var(--r3); padding: 9px 12px; color: var(--t1);
@@ -193,9 +190,41 @@
       cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: all .15s; flex-shrink: 0;
     }
-    .qs-submit.carta-mode    { background: var(--blu); color: #fff; }
-    .qs-submit.contanti-mode { background: var(--grn); color: #fff; }
+    .qs-submit.in-mode  { background: var(--grn); color: #fff; }
+    .qs-submit.out-mode { background: var(--red); color: #fff; }
     .qs-submit:active { opacity:.82; transform:scale(.93); }
+
+    /* ─────────────────────────────────────────
+       FAB MENU
+    ───────────────────────────────────────── */
+    .fab-menu-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 90;
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .fab-menu-overlay.on { opacity: 1; pointer-events: auto; }
+    .fab-menu {
+      position: fixed; right: 18px; bottom: calc(86px + var(--sab));
+      display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+      z-index: 91;
+    }
+    .fab-menu-item {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--s1); border: 0.5px solid var(--br2); border-radius: 30px;
+      padding: 11px 18px 11px 16px; cursor: pointer; transform: translateY(8px) scale(.95); opacity: 0;
+      transition: transform .18s, opacity .18s; box-shadow: 0 4px 18px rgba(0,0,0,.35);
+    }
+    .fab-menu-overlay.on ~ .fab-menu .fab-menu-item,
+    .fab-menu.on .fab-menu-item { transform: translateY(0) scale(1); opacity: 1; }
+    .fab-menu-item span { font-size: 13px; font-weight: 500; color: var(--t1); white-space: nowrap; }
+    .fab-menu-item .fmi-icon {
+      width: 30px; height: 30px; border-radius: 50%; display:flex; align-items:center; justify-content:center;
+      font-size: 15px; flex-shrink:0;
+    }
+    .fab-menu-item:nth-child(1) .fmi-icon { background: var(--goldbg); color: var(--gold); }
+    .fab-menu-item:nth-child(2) .fmi-icon { background: var(--blu2); color: var(--blu); }
+    .fab-menu-item:nth-child(3) .fmi-icon { background: var(--grn2); color: var(--grn); }
+    .fab.fab-open i { transform: rotate(45deg); }
+    .fab i { transition: transform .2s; }
 
     /* ─────────────────────────────────────────
        SECTION HEADERS
@@ -735,6 +764,27 @@
       <div class="kpi"><div class="kpi-lbl">Entrate</div><div class="kpi-val g" id="hIncome">€ 0</div></div>
       <div class="kpi"><div class="kpi-lbl">Uscite</div>  <div class="kpi-val r" id="hOutcome">€ 0</div></div>
     </div>
+    <!-- QUICK ADD WIDGET -->
+    <div class="qs-widget">
+      <div class="qs-header">
+        <div class="qs-title"><i class="ti ti-bolt"></i>Movimento Rapido</div>
+      </div>
+      <div class="qs-body">
+        <div class="qs-source-row">
+          <button class="qs-src-btn" id="qsBtnIn"  onclick="pickQsType('in')">  <i class="ti ti-trending-up"></i>Entrata</button>
+          <button class="qs-src-btn" id="qsBtnOut" onclick="pickQsType('out')"><i class="ti ti-trending-down"></i>Uscita</button>
+        </div>
+        <div class="qs-input-row">
+          <div class="qs-amt-wrap">
+            <span class="qs-amt-prefix">€</span>
+            <input class="qs-amt" id="qsAmt" type="number" inputmode="decimal" placeholder="0,00" />
+          </div>
+          <button class="qs-submit" id="qsSubmitBtn" onclick="submitQs()"><i class="ti ti-arrow-right"></i></button>
+        </div>
+        <div class="qs-tagrow" id="qsTagRow"></div>
+        <input class="qs-note" id="qsNote" type="text" placeholder="Nota (opzionale)..." />
+      </div>
+    </div>
     <div class="sec"><div class="sec-hdr">Andamento Conto Centrale</div></div>
     <div class="chart-card"><div class="chart-wrap"><canvas id="cGlobal"></canvas></div></div>
     <div class="sec"><div class="sec-hdr">Allocazione per tag</div></div>
@@ -825,6 +875,10 @@
       <div class="sheet-handle"></div>
       <div class="sheet-title">Avvia Ciclo</div>
       <div id="newCicloTagLabel" style="text-align:center;font-size:12px;color:var(--t3);margin-bottom:18px;letter-spacing:1px;text-transform:uppercase"></div>
+      <div class="fi" id="ncTagBlock" style="display:none">
+        <div class="fl">Tag</div>
+        <div class="tag-chips" id="ncChipRow"></div>
+      </div>
       <div class="fi"><div class="fl">Costo iniziale €</div><input class="fin" id="ncInitCost" type="number" inputmode="decimal" placeholder="0,00" /></div>
       <div class="fi">
         <div class="fl" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
@@ -887,7 +941,19 @@
     <div class="nav-it"    id="nCal"   onclick="goPage('pgCal','nCal')">    <i class="ti ti-calendar"></i>  <span>Calendario</span></div>
     <div class="nav-it"    id="nStats" onclick="goPage('pgStats','nStats')"><i class="ti ti-chart-bar"></i><span>Analisi</span></div>
   </nav>
-  <button class="fab" onclick="openNewTx()"><i class="ti ti-plus"></i></button>
+  <div class="fab-menu-overlay" id="fabOverlay" onclick="closeFabMenu()"></div>
+  <div class="fab-menu" id="fabMenu">
+    <div class="fab-menu-item" onclick="closeFabMenu();openNewTx()">
+      <span>Nuova operazione</span><div class="fmi-icon"><i class="ti ti-arrows-exchange"></i></div>
+    </div>
+    <div class="fab-menu-item" onclick="closeFabMenu();openAddTag()">
+      <span>Nuovo tag</span><div class="fmi-icon"><i class="ti ti-tag"></i></div>
+    </div>
+    <div class="fab-menu-item" onclick="closeFabMenu();openNewCicloFromFab()">
+      <span>Nuovo ciclo</span><div class="fmi-icon"><i class="ti ti-refresh"></i></div>
+    </div>
+  </div>
+  <button class="fab" id="fabBtn" onclick="toggleFabMenu()"><i class="ti ti-plus"></i></button>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -1003,6 +1069,54 @@ function closeSheet(id){ document.getElementById(id).classList.remove('on'); }
 // ═══════════════════════════════════════════════════════
 //  OPEN / ADD TX
 // ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+//  FAB MENU
+// ═══════════════════════════════════════════════════════
+function toggleFabMenu(){
+  const ov=document.getElementById('fabOverlay'), menu=document.getElementById('fabMenu'), btn=document.getElementById('fabBtn');
+  const open=!menu.classList.contains('on');
+  ov.classList.toggle('on',open); menu.classList.toggle('on',open); btn.classList.toggle('fab-open',open);
+}
+function closeFabMenu(){
+  document.getElementById('fabOverlay').classList.remove('on');
+  document.getElementById('fabMenu').classList.remove('on');
+  document.getElementById('fabBtn').classList.remove('fab-open');
+}
+function openNewCicloFromFab(){
+  openNewCiclo(true);
+}
+
+// ═══════════════════════════════════════════════════════
+//  QUICK ADD WIDGET (home)
+// ═══════════════════════════════════════════════════════
+let qsType=null, qsTag=null;
+function pickQsType(t){
+  qsType=t;
+  document.getElementById('qsBtnIn').className  = 'qs-src-btn'+(t==='in'?' in-sel':'');
+  document.getElementById('qsBtnOut').className = 'qs-src-btn'+(t==='out'?' out-sel':'');
+  document.getElementById('qsSubmitBtn').className='qs-submit'+(t==='in'?' in-mode':t==='out'?' out-mode':'');
+}
+function buildQsTagRow(){
+  const d=loadData(); const row=document.getElementById('qsTagRow'); row.innerHTML='';
+  d.tags.forEach(tag=>{
+    const b=document.createElement('button'); b.className='chip'+(qsTag===tag?' on':''); b.textContent=tag;
+    b.onclick=()=>{ qsTag=qsTag===tag?null:tag; buildQsTagRow(); };
+    row.appendChild(b);
+  });
+}
+function submitQs(){
+  if(!qsType){shakeEl(document.getElementById('qsBtnIn'));return;}
+  const amt=parseFloat(document.getElementById('qsAmt').value);
+  if(!amt||amt<=0){shake('qsAmt');return;}
+  const note=document.getElementById('qsNote').value.trim();
+  const d=loadData();
+  d.transactions.push({id:Date.now(),type:qsType,amount:amt,tag:qsTag||null,note,ts:Date.now()});
+  saveData(d);
+  document.getElementById('qsAmt').value=''; document.getElementById('qsNote').value='';
+  qsTag=null; buildQsTagRow();
+  renderAll();
+}
+
 function openNewTx(){
   const d=loadData(); txType=null;selTag=null;
   ['btnIn','btnOut'].forEach(id=>document.getElementById(id).className='type-btn');
@@ -1121,6 +1235,7 @@ function makeTxRow(tx,d){
   return div;
 }
 function makeQsRow(qs){
+  // Legacy: vecchie "spese rapide" carta/contanti importate da backup precedenti — solo visualizzazione/eliminazione
   const div=document.createElement('div'); div.className='tx-row';
   const isCarta=qs.source==='carta';
   div.innerHTML=`<div class="tx-icon qs-ico"><i class="ti ti-${isCarta?'credit-card':'cash-banknote'}"></i></div>
@@ -1133,7 +1248,6 @@ function makeQsRow(qs){
       <div class="tx-amt ${isCarta?'b':'g'}">\u2212${fEur(qs.amount)}</div>
       <span class="tx-badge ${isCarta?'carta':'contanti'}-badge">${isCarta?'Carta':'Cash'}</span>
       <div class="tx-actions">
-        <button class="tx-action"     onclick="openEditQs(${qs.id})"><i class="ti ti-edit"></i></button>
         <button class="tx-action del" onclick="askDel(${qs.id},'qs')"><i class="ti ti-trash"></i></button>
       </div>
     </div>`;
@@ -1146,6 +1260,7 @@ function makeQsRow(qs){
 function renderHome(){
   const d=loadData(); const bal=calcBalances(d);
   document.getElementById('hBalance').textContent=fEur(bal.conto);
+  buildQsTagRow();
   const tot=d.transactions.length;
   document.getElementById('hSub').textContent=tot?`${tot} moviment${tot===1?'o':'i'}`:'Premi + per iniziare';
   document.getElementById('hIncome').textContent=fShortK(bal.income);
@@ -1451,9 +1566,20 @@ function confirmReset(){
 // ═══════════════════════════════════════════════════════
 let _cicloTag=null, _cicloId=null;
 
-function openNewCiclo(){
-  _cicloTag=_currentTagDetail;
-  document.getElementById('newCicloTagLabel').textContent=_cicloTag||'';
+function openNewCiclo(fromFab){
+  _cicloTag = fromFab ? null : _currentTagDetail;
+  const d=loadData();
+  const tagBlock=document.getElementById('ncTagBlock');
+  const tagLabel=document.getElementById('newCicloTagLabel');
+  if(fromFab){
+    tagLabel.style.display='none';
+    tagBlock.style.display='';
+    buildChips('ncChipRow',d,_cicloTag,function cb(t){_cicloTag=_cicloTag===t?null:t;buildChips('ncChipRow',d,_cicloTag,cb);});
+  } else {
+    tagBlock.style.display='none';
+    tagLabel.style.display='';
+    tagLabel.textContent=_cicloTag||'';
+  }
   document.getElementById('ncInitCost').value='';
   document.getElementById('ncEstRev').value='';
   document.getElementById('ncSospeso').checked=false;
@@ -1480,11 +1606,12 @@ function toggleNcSospeso(){
   const estInput=document.getElementById('ncEstRev');
   estInput.disabled=sospeso;
   estInput.style.opacity=sospeso?'.4':'1';
-  document.getElementById('ncSospesoLbl').textContent=sospeso?'In sospeso':'Non lo so';
+  document.getElementById('ncSospesoLbl').textContent=sospeso?'In sospeso':'Confermato';
   if(sospeso){ estInput.value=''; document.getElementById('ncProfitPreview').textContent=''; }
 }
 
 function doNewCiclo(){
+  if(!_cicloTag){shakeEl(document.getElementById('ncChipRow'));return;}
   const cost=parseFloat(document.getElementById('ncInitCost').value);
   const sospeso=document.getElementById('ncSospeso').checked;
   const est=sospeso?null:parseFloat(document.getElementById('ncEstRev').value);
@@ -1508,7 +1635,7 @@ function doNewCiclo(){
   });
   saveData(d);
   closeSheet('newCicloSheet');
-  renderCicli(_cicloTag,d);
+  if(_currentTagDetail===_cicloTag) renderCicli(_cicloTag,d);
   renderAll();
   _saveCicloCalEvent(id,_cicloTag,today,null,d);
 }
