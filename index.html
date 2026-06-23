@@ -411,6 +411,10 @@
     .dest-btn i { font-size: 19px; }
     .dest-btn.carta-sel    { border-color:var(--blu); color:var(--blu); background:var(--blu2); }
     .dest-btn.contanti-sel { border-color:var(--grn); color:var(--grn); background:var(--grn2); }
+    .dest-btn.norm-sel     { border-color:var(--gold); color:var(--gold); background:var(--goldbg); }
+    .dest-row.dest-row3 { grid-template-columns:1fr 1fr 1fr; gap:6px; }
+    .dest-row3 .dest-btn { padding:11px 0; font-size:11px; gap:4px; flex-direction:column; }
+    .dest-row3 .dest-btn i { font-size:17px; }
     .cta {
       width:100%; padding:16px; border-radius:var(--r2); background:var(--gold);
       color:#080808; font-size:15px; font-weight:600; border:none;
@@ -626,11 +630,6 @@
   <div class="add-card">
     <div class="add-card-title">Spesa Rapida</div>
     <div class="add-amt-display" id="addDisplay"><span id="addDisplayText">0</span><span class="add-amt-cursor"></span></div>
-    <div style="text-align:center;font-size:11px;color:rgba(255,255,255,.4);margin-bottom:16px;letter-spacing:.5px" id="addSrcLabel">Seleziona fonte</div>
-    <div class="add-src-row">
-      <button class="add-src-btn" id="addBtnCarta"    onclick="addPickSrc('carta')">    <i class="ti ti-credit-card"></i>Carta</button>
-      <button class="add-src-btn" id="addBtnContanti" onclick="addPickSrc('contanti')"> <i class="ti ti-cash-banknote"></i>Contanti</button>
-    </div>
     <input class="add-note-inp" id="addNoteInp" type="text" placeholder="Nota veloce..." />
     <div class="add-numpad">
       <button class="npk" onclick="npKey('1')">1</button>
@@ -672,14 +671,6 @@
       <div class="type-row">
         <button class="type-btn" id="btnIn"   onclick="pickType('in')">  <i class="ti ti-trending-up"></i>Entrata</button>
         <button class="type-btn" id="btnOut"  onclick="pickType('out')"> <i class="ti ti-trending-down"></i>Uscita</button>
-        <button class="type-btn" id="btnPrel" onclick="pickType('prel')"><i class="ti ti-wallet"></i>Prelievo</button>
-      </div>
-      <div class="fi" id="destBlock" style="display:none">
-        <div class="fl">Destinazione prelievo</div>
-        <div class="dest-row">
-          <button class="dest-btn" id="dCarta"    onclick="pickDest('carta')">    <i class="ti ti-credit-card"></i>Carta Digitale</button>
-          <button class="dest-btn" id="dContanti" onclick="pickDest('contanti')"> <i class="ti ti-cash-banknote"></i>Contanti</button>
-        </div>
       </div>
       <div class="fi"><div class="fl">Importo €</div><input class="fin" id="iAmt" type="number" inputmode="decimal" placeholder="0,00" /></div>
       <div class="fi" id="tagBlock">
@@ -700,14 +691,6 @@
       <div class="type-row">
         <button class="type-btn" id="eBtnIn"   onclick="pickEditType('in')">  <i class="ti ti-trending-up"></i>Entrata</button>
         <button class="type-btn" id="eBtnOut"  onclick="pickEditType('out')"> <i class="ti ti-trending-down"></i>Uscita</button>
-        <button class="type-btn" id="eBtnPrel" onclick="pickEditType('prel')"><i class="ti ti-wallet"></i>Prelievo</button>
-      </div>
-      <div class="fi" id="eDestBlock" style="display:none">
-        <div class="fl">Destinazione</div>
-        <div class="dest-row">
-          <button class="dest-btn" id="eDCarta"    onclick="pickEditDest('carta')">    <i class="ti ti-credit-card"></i>Carta</button>
-          <button class="dest-btn" id="eDContanti" onclick="pickEditDest('contanti')"> <i class="ti ti-cash-banknote"></i>Contanti</button>
-        </div>
       </div>
       <div class="fi"><div class="fl">Importo €</div><input class="fin" id="eAmt" type="number" inputmode="decimal" /></div>
       <div class="fi" id="eTagBlock"><div class="fl">Tag</div><div class="tag-chips" id="eChipRow"></div></div>
@@ -730,25 +713,6 @@
     </div>
   </div>
 
-  <!-- OVERLAY: MODIFICA SPESA RAPIDA -->
-  <div class="overlay" id="editQsSheet">
-    <div class="sheet">
-      <div class="sheet-handle"></div>
-      <div class="sheet-title">Modifica spesa rapida</div>
-      <div class="fi">
-        <div class="fl">Fonte</div>
-        <div class="dest-row">
-          <button class="dest-btn" id="eqsCarta"    onclick="pickEditQsSrc('carta')">    <i class="ti ti-credit-card"></i>Carta</button>
-          <button class="dest-btn" id="eqsContanti" onclick="pickEditQsSrc('contanti')"> <i class="ti ti-cash-banknote"></i>Contanti</button>
-        </div>
-      </div>
-      <div class="fi"><div class="fl">Importo €</div><input class="fin" id="eqsAmt" type="number" inputmode="decimal" /></div>
-      <div class="fi"><div class="fl">Nota</div><input class="fin" id="eqsNote" type="text" /></div>
-      <button class="cta" onclick="saveEditQs()">Salva modifiche</button>
-      <button class="cta sec-cta" onclick="closeSheet('editQsSheet')">Annulla</button>
-    </div>
-  </div>
-
   <!-- OVERLAY: NUOVO TAG -->
   <div class="overlay" id="addTagSheet">
     <div class="sheet">
@@ -766,45 +730,10 @@
       <div class="hero-eyebrow">Conto Centrale</div>
       <div class="hero-main-balance" id="hBalance">€ 0,00</div>
       <div class="hero-sub" id="hSub">Nessun movimento</div>
-      <div class="wallet-strip">
-        <div class="wallet-card carta">
-          <div class="wallet-card-eyebrow"><i class="ti ti-credit-card"></i>Carta Digitale</div>
-          <div class="wallet-card-balance" id="hCarta">€ 0,00</div>
-        </div>
-        <div class="wallet-card contanti">
-          <div class="wallet-card-eyebrow"><i class="ti ti-cash-banknote"></i>Contanti</div>
-          <div class="wallet-card-balance" id="hContanti">€ 0,00</div>
-        </div>
-      </div>
     </div>
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-lbl">Entrate</div><div class="kpi-val g" id="hIncome">€ 0</div></div>
       <div class="kpi"><div class="kpi-lbl">Uscite</div>  <div class="kpi-val r" id="hOutcome">€ 0</div></div>
-      <div class="kpi"><div class="kpi-lbl">Prelievi</div><div class="kpi-val v" id="hPrelievi">€ 0</div></div>
-    </div>
-    <!-- QUICK SPEND WIDGET -->
-    <div class="qs-widget">
-      <div class="qs-header">
-        <div class="qs-title"><i class="ti ti-bolt"></i>Spesa Rapida</div>
-        <div class="qs-balances">
-          <span class="qs-bal-pill carta"    id="qsBadgeCarta">Carta</span>
-          <span class="qs-bal-pill contanti" id="qsBadgeContanti">Cash</span>
-        </div>
-      </div>
-      <div class="qs-body">
-        <div class="qs-source-row">
-          <button class="qs-src-btn" id="qsBtnCarta"    onclick="pickQsSrc('carta')">    <i class="ti ti-credit-card"></i>Carta</button>
-          <button class="qs-src-btn" id="qsBtnContanti" onclick="pickQsSrc('contanti')"> <i class="ti ti-cash-banknote"></i>Contanti</button>
-        </div>
-        <div class="qs-input-row">
-          <div class="qs-amt-wrap">
-            <span class="qs-amt-prefix">€</span>
-            <input class="qs-amt" id="qsAmt" type="number" inputmode="decimal" placeholder="0,00" />
-          </div>
-          <button class="qs-submit" id="qsSubmitBtn" onclick="submitQs()"><i class="ti ti-arrow-right"></i></button>
-        </div>
-        <input class="qs-note" id="qsNote" type="text" placeholder="Descrizione (opzionale)..." />
-      </div>
     </div>
     <div class="sec"><div class="sec-hdr">Andamento Conto Centrale</div></div>
     <div class="chart-card"><div class="chart-wrap"><canvas id="cGlobal"></canvas></div></div>
@@ -982,14 +911,12 @@ function loadData() {
 function saveData(d) { localStorage.setItem(DB_KEY, JSON.stringify(d)); }
 
 function calcBalances(d) {
-  let income=0, outcome=0, prelievi=0, cartaIn=0, contantiIn=0, cartaOut=0, contantiOut=0;
+  let income=0, outcome=0;
   d.transactions.forEach(t => {
-    if(t.type==='in')   income   += t.amount;
-    if(t.type==='out')  outcome  += t.amount;
-    if(t.type==='prel'){ prelievi += t.amount; if(t.dest==='carta') cartaIn+=t.amount; else contantiIn+=t.amount; }
+    if(t.type==='in')  income  += t.amount;
+    if(t.type==='out') outcome += t.amount;
   });
-  d.quickSpends.forEach(q => { if(q.source==='carta') cartaOut+=q.amount; else contantiOut+=q.amount; });
-  return { conto: income-outcome-prelievi, income, outcome, prelievi, carta: cartaIn-cartaOut, contanti: contantiIn-contantiOut };
+  return { conto: income-outcome, income, outcome };
 }
 
 const PALETTE = ['#c8a84b','#5b8dee','#3db87a','#e05555','#9b72dd','#56c7c7','#e88a2c','#e85baf','#78c97a','#d4a44c'];
@@ -1002,18 +929,7 @@ function fDate(ts){ const d=new Date(ts); return d.toLocaleDateString('it-IT',{d
 // ═══════════════════════════════════════════════════════
 //  #ADD MODE — numpad logic
 // ═══════════════════════════════════════════════════════
-let addRaw = '', addSrc = null;
-
-function addPickSrc(src) {
-  addSrc = src;
-  document.getElementById('addBtnCarta').className    = 'add-src-btn' + (src==='carta'    ? ' carta-sel'    : '');
-  document.getElementById('addBtnContanti').className = 'add-src-btn' + (src==='contanti' ? ' contanti-sel' : '');
-  const lbl = document.getElementById('addSrcLabel');
-  const d = loadData(); const bal = calcBalances(d);
-  const avail = src==='carta' ? bal.carta : bal.contanti;
-  lbl.textContent = (src==='carta' ? 'Carta Digitale' : 'Contanti') + ' · disponibile ' + fEur(avail);
-  lbl.style.color = 'rgba(255,255,255,.55)';
-}
+let addRaw = '';
 
 function npKey(k) {
   if (k==='del') { addRaw = addRaw.slice(0,-1); }
@@ -1039,18 +955,14 @@ function addCancel() {
 function addConfirm() {
   const amt = parseFloat(addRaw);
   if (!amt || amt <= 0) { shakeEl(document.getElementById('addDisplay')); return; }
-  if (!addSrc) { shakeEl(document.getElementById('addBtnCarta')); return; }
   const d = loadData();
-  const bal = calcBalances(d);
-  const avail = addSrc==='carta' ? bal.carta : bal.contanti;
-  if (amt > avail + 0.001) { shakeEl(document.getElementById('addDisplay')); return; }
   const note = document.getElementById('addNoteInp').value.trim();
-  d.quickSpends.push({ id: Date.now(), amount: amt, note, source: addSrc, ts: Date.now() });
+  d.transactions.push({ id: Date.now(), type:'out', amount: amt, tag:null, note, ts: Date.now() });
   saveData(d);
   // Show success flash then close
   const succ = document.getElementById('addSuccess');
   const lbl  = document.getElementById('addSuccessLabel');
-  lbl.textContent = '−' + fEur(amt) + ' da ' + (addSrc==='carta' ? 'Carta' : 'Contanti');
+  lbl.textContent = '−' + fEur(amt);
   succ.classList.add('show');
   setTimeout(() => {
     try { window.close(); } catch(e){}
@@ -1092,13 +1004,11 @@ function closeSheet(id){ document.getElementById(id).classList.remove('on'); }
 //  OPEN / ADD TX
 // ═══════════════════════════════════════════════════════
 function openNewTx(){
-  const d=loadData(); txType=null;selTag=null;selDest=null;
-  ['btnIn','btnOut','btnPrel'].forEach(id=>document.getElementById(id).className='type-btn');
+  const d=loadData(); txType=null;selTag=null;
+  ['btnIn','btnOut'].forEach(id=>document.getElementById(id).className='type-btn');
   document.getElementById('iAmt').value=''; document.getElementById('iNote').value='';
-  document.getElementById('destBlock').style.display='none';
   document.getElementById('tagBlock').style.display='';
   document.getElementById('ctaSubmit').className='cta';
-  ['dCarta','dContanti'].forEach(id=>document.getElementById(id).className='dest-btn');
   buildChips('chipRow',d,null,function cb(t){selTag=selTag===t?null:t;buildChips('chipRow',d,selTag,cb);});
   document.getElementById('txSheet').classList.add('on');
   setTimeout(()=>document.getElementById('iAmt').focus(),350);
@@ -1107,24 +1017,14 @@ function pickType(t){
   txType=t;
   document.getElementById('btnIn').className='type-btn'+(t==='in'?' in-sel':'');
   document.getElementById('btnOut').className='type-btn'+(t==='out'?' out-sel':'');
-  document.getElementById('btnPrel').className='type-btn'+(t==='prel'?' prel-sel':'');
-  document.getElementById('destBlock').style.display=t==='prel'?'':'none';
-  document.getElementById('tagBlock').style.display=t==='prel'?'none':'';
-  document.getElementById('ctaSubmit').className=t==='prel'?'cta prel-cta':'cta';
-}
-function pickDest(dest){
-  selDest=dest;
-  document.getElementById('dCarta').className='dest-btn'+(dest==='carta'?' carta-sel':'');
-  document.getElementById('dContanti').className='dest-btn'+(dest==='contanti'?' contanti-sel':'');
 }
 function submitTx(){
   if(!txType){shake('btnIn');return;}
   const amt=parseFloat(document.getElementById('iAmt').value);
   if(!amt||amt<=0){shake('iAmt');return;}
-  if(txType==='prel'&&!selDest){shake('dCarta');shake('dContanti');return;}
   const note=document.getElementById('iNote').value.trim();
   const d=loadData();
-  d.transactions.push({id:Date.now(),type:txType,amount:amt,tag:txType==='prel'?null:(selTag||null),note,ts:Date.now(),dest:txType==='prel'?selDest:null});
+  d.transactions.push({id:Date.now(),type:txType,amount:amt,tag:selTag||null,note,ts:Date.now()});
   saveData(d); closeSheet('txSheet'); renderAll();
 }
 
@@ -1133,8 +1033,8 @@ function submitTx(){
 // ═══════════════════════════════════════════════════════
 function openEditTx(id){
   const d=loadData(); const tx=d.transactions.find(t=>t.id===id); if(!tx)return;
-  editId=id;editTxType=tx.type;editSelTag=tx.tag||null;editSelDest=tx.dest||null;
-  pickEditType(tx.type); if(tx.type==='prel'&&tx.dest)pickEditDest(tx.dest);
+  editId=id;editTxType=tx.type;editSelTag=tx.tag||null;
+  pickEditType(tx.type);
   document.getElementById('eAmt').value=tx.amount; document.getElementById('eNote').value=tx.note||'';
   buildChips('eChipRow',d,editSelTag,function cb(t){editSelTag=editSelTag===t?null:t;buildChips('eChipRow',d,editSelTag,cb);});
   document.getElementById('editSheet').classList.add('on');
@@ -1143,14 +1043,6 @@ function pickEditType(t){
   editTxType=t;
   document.getElementById('eBtnIn').className='type-btn'+(t==='in'?' in-sel':'');
   document.getElementById('eBtnOut').className='type-btn'+(t==='out'?' out-sel':'');
-  document.getElementById('eBtnPrel').className='type-btn'+(t==='prel'?' prel-sel':'');
-  document.getElementById('eDestBlock').style.display=t==='prel'?'':'none';
-  document.getElementById('eTagBlock').style.display=t==='prel'?'none':'';
-}
-function pickEditDest(dest){
-  editSelDest=dest;
-  document.getElementById('eDCarta').className='dest-btn'+(dest==='carta'?' carta-sel':'');
-  document.getElementById('eDContanti').className='dest-btn'+(dest==='contanti'?' contanti-sel':'');
 }
 function saveEdit(){
   const amt=parseFloat(document.getElementById('eAmt').value);
@@ -1158,8 +1050,7 @@ function saveEdit(){
   const d=loadData(); const idx=d.transactions.findIndex(t=>t.id===editId);
   if(idx>-1){
     d.transactions[idx].type=editTxType; d.transactions[idx].amount=amt;
-    d.transactions[idx].tag=editTxType==='prel'?null:editSelTag;
-    d.transactions[idx].dest=editTxType==='prel'?editSelDest:null;
+    d.transactions[idx].tag=editSelTag;
     d.transactions[idx].note=document.getElementById('eNote').value.trim();
   }
   saveData(d); closeSheet('editSheet'); renderAll();
@@ -1174,48 +1065,6 @@ function confirmDel(){
   if(delType==='qs') d.quickSpends=d.quickSpends.filter(q=>q.id!==delId);
   else d.transactions=d.transactions.filter(t=>t.id!==delId);
   saveData(d); closeSheet('delSheet'); renderAll();
-}
-
-// ═══════════════════════════════════════════════════════
-//  QUICK SPEND (in-page widget)
-// ═══════════════════════════════════════════════════════
-function pickQsSrc(src){
-  qsSrc=src;
-  document.getElementById('qsBtnCarta').className='qs-src-btn'+(src==='carta'?' carta-sel':'');
-  document.getElementById('qsBtnContanti').className='qs-src-btn'+(src==='contanti'?' contanti-sel':'');
-  document.getElementById('qsSubmitBtn').className='qs-submit'+(src==='carta'?' carta-mode':src==='contanti'?' contanti-mode':'');
-}
-function submitQs(){
-  if(!qsSrc){shakeEl(document.getElementById('qsBtnCarta'));return;}
-  const amt=parseFloat(document.getElementById('qsAmt').value);
-  if(!amt||amt<=0){shake('qsAmt');return;}
-  const note=document.getElementById('qsNote').value.trim();
-  const d=loadData();
-  d.quickSpends.push({id:Date.now(),amount:amt,note,source:qsSrc,ts:Date.now()});
-  saveData(d);
-  document.getElementById('qsAmt').value=''; document.getElementById('qsNote').value='';
-  renderAll();
-  const card=qsSrc==='carta'?document.getElementById('hCarta'):document.getElementById('hContanti');
-  card.style.transition='color .1s'; card.style.color='var(--red)';
-  setTimeout(()=>{card.style.color='';card.style.transition='';},600);
-}
-function openEditQs(id){
-  const d=loadData(); const qs=d.quickSpends.find(q=>q.id===id); if(!qs)return;
-  editQsId=id; editQsSrc=qs.source; pickEditQsSrc(qs.source);
-  document.getElementById('eqsAmt').value=qs.amount; document.getElementById('eqsNote').value=qs.note||'';
-  document.getElementById('editQsSheet').classList.add('on');
-}
-function pickEditQsSrc(src){
-  editQsSrc=src;
-  document.getElementById('eqsCarta').className='dest-btn'+(src==='carta'?' carta-sel':'');
-  document.getElementById('eqsContanti').className='dest-btn'+(src==='contanti'?' contanti-sel':'');
-}
-function saveEditQs(){
-  const amt=parseFloat(document.getElementById('eqsAmt').value);
-  if(!amt||amt<=0){shake('eqsAmt');return;}
-  const d=loadData(); const idx=d.quickSpends.findIndex(q=>q.id===editQsId);
-  if(idx>-1){ d.quickSpends[idx].source=editQsSrc; d.quickSpends[idx].amount=amt; d.quickSpends[idx].note=document.getElementById('eqsNote').value.trim(); }
-  saveData(d); closeSheet('editQsSheet'); renderAll();
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1297,23 +1146,17 @@ function makeQsRow(qs){
 function renderHome(){
   const d=loadData(); const bal=calcBalances(d);
   document.getElementById('hBalance').textContent=fEur(bal.conto);
-  document.getElementById('hCarta').textContent=fEur(bal.carta);
-  document.getElementById('hContanti').textContent=fEur(bal.contanti);
-  document.getElementById('qsBadgeCarta').textContent='Carta '+fShortK(bal.carta);
-  document.getElementById('qsBadgeContanti').textContent='Cash '+fShortK(bal.contanti);
-  const tot=d.transactions.length+d.quickSpends.length;
+  const tot=d.transactions.length;
   document.getElementById('hSub').textContent=tot?`${tot} moviment${tot===1?'o':'i'}`:'Premi + per iniziare';
   document.getElementById('hIncome').textContent=fShortK(bal.income);
   document.getElementById('hOutcome').textContent=fShortK(bal.outcome);
-  document.getElementById('hPrelievi').textContent=fShortK(bal.prelievi);
   buildGlobalChart(d.transactions);
   buildAlloc(d.transactions,d);
   const list=document.getElementById('feedHomeList'); list.innerHTML='';
-  const all=[...d.transactions.map(t=>({...t,_type:'tx'}))]
-    .concat(d.quickSpends.map(q=>({...q,_type:'qs'}))).sort((a,b)=>b.ts-a.ts);
+  const all=d.transactions.slice().sort((a,b)=>b.ts-a.ts);
   if(!all.length){list.innerHTML='<div class="empty"><i class="ti ti-currency-euro"></i>Nessun movimento ancora</div>';return;}
   const showN=renderHome._show||10;
-  all.slice(0,showN).forEach(item=>list.appendChild(item._type==='qs'?makeQsRow(item):makeTxRow(item,d)));
+  all.slice(0,showN).forEach(item=>list.appendChild(makeTxRow(item,d)));
   if(all.length>showN){
     const btn=document.createElement('button');
     btn.className='show-more-btn';
@@ -1691,7 +1534,7 @@ function doAddCostoCiclo(){
     id:Date.now(),type:'out',amount:amt,
     tag:c.tag||null,
     note:`${note||'Costo ciclo'} · ${c.tag||''}`,
-    ts:Date.now(),dest:null
+    ts:Date.now()
   });
   saveData(d);
   closeSheet('addCostSheet');
