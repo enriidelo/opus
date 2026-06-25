@@ -205,8 +205,9 @@
     .fab-menu {
       position: fixed; right: 18px; bottom: calc(86px + var(--sab));
       display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
-      z-index: 91;
+      z-index: 91; pointer-events: none;
     }
+    .fab-menu.on { pointer-events: auto; }
     .fab-menu-item {
       display: flex; align-items: center; gap: 10px;
       background: var(--s1); border: 0.5px solid var(--br2); border-radius: 30px;
@@ -223,6 +224,7 @@
     .fab-menu-item:nth-child(1) .fmi-icon { background: var(--goldbg); color: var(--gold); }
     .fab-menu-item:nth-child(2) .fmi-icon { background: var(--blu2); color: var(--blu); }
     .fab-menu-item:nth-child(3) .fmi-icon { background: var(--grn2); color: var(--grn); }
+    .fab-menu-item:nth-child(4) .fmi-icon { background: var(--red2); color: var(--red); }
     .fab.fab-open i { transform: rotate(45deg); }
     .fab i { transition: transform .2s; }
 
@@ -847,6 +849,8 @@
     <div class="stats-block" id="statsBlock"></div>
     <div class="sec" style="padding-top:4px"><div class="sec-hdr">Andamento periodo</div></div>
     <div class="chart-card"><div class="chart-wrap"><canvas id="cStats"></canvas></div></div>
+    <div class="sec"><div class="sec-hdr">Ricorrenze attive</div></div>
+    <div id="recList" style="padding:0 18px 8px"></div>
     <div class="sec"><div class="sec-hdr">Impostazioni</div></div>
     <div style="padding:0 18px 28px">
       <div class="stat-row" style="cursor:pointer" onclick="openAddTag()">
@@ -866,6 +870,31 @@
         <span class="stat-lbl" style="color:var(--red)">Reset completo</span>
         <span style="color:var(--red);font-size:20px"><i class="ti ti-trash"></i></span>
       </div>
+    </div>
+  </div>
+
+  <!-- OVERLAY: NUOVA RICORRENZA -->
+  <div class="overlay" id="newRecSheet">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">Nuova Ricorrenza</div>
+      <div class="type-row">
+        <button class="type-btn" id="rcBtnIn"  onclick="pickRecType('in')">  <i class="ti ti-trending-up"></i>Entrata</button>
+        <button class="type-btn" id="rcBtnOut" onclick="pickRecType('out')"><i class="ti ti-trending-down"></i>Uscita</button>
+      </div>
+      <div class="fi"><div class="fl">Importo €</div><input class="fin" id="rcAmt" type="number" inputmode="decimal" placeholder="0,00" /></div>
+      <div class="fi"><div class="fl">Frequenza</div>
+        <div class="dest-row dest-row3">
+          <button class="dest-btn" id="rcFreqWeekly"  onclick="pickRecFreq('weekly')">Settimanale</button>
+          <button class="dest-btn" id="rcFreqMonthly" onclick="pickRecFreq('monthly')">Mensile</button>
+          <button class="dest-btn" id="rcFreqYearly"  onclick="pickRecFreq('yearly')">Annuale</button>
+        </div>
+      </div>
+      <div class="fi"><div class="fl">Prima esecuzione</div><input class="fin" id="rcStartDate" type="date" /></div>
+      <div class="fi"><div class="fl">Tag (opzionale)</div><div class="tag-chips" id="rcChipRow"></div></div>
+      <div class="fi"><div class="fl">Nota</div><input class="fin" id="rcNote" type="text" placeholder="Stipendio, Netflix..." /></div>
+      <button class="cta" onclick="doNewRec()">Crea Ricorrenza</button>
+      <button class="cta sec-cta" onclick="closeSheet('newRecSheet')">Annulla</button>
     </div>
   </div>
 
@@ -952,6 +981,9 @@
     <div class="fab-menu-item" onclick="closeFabMenu();openNewCicloFromFab()">
       <span>Nuovo ciclo</span><div class="fmi-icon"><i class="ti ti-refresh"></i></div>
     </div>
+    <div class="fab-menu-item" onclick="closeFabMenu();openNewRec()">
+      <span>Entrata/Uscita ricorrente</span><div class="fmi-icon"><i class="ti ti-repeat"></i></div>
+    </div>
   </div>
   <button class="fab" id="fabBtn" onclick="toggleFabMenu()"><i class="ti ti-plus"></i></button>
 </div>
@@ -971,10 +1003,43 @@ function loadData() {
   try {
     const d = JSON.parse(localStorage.getItem(DB_KEY) || '{}');
     const cycles = (d.cycles||[]).map(c=>({collectedRevenue:0,...c}));
-    return { tags: d.tags||[], tColors: d.tColors||{}, transactions: d.transactions||[], quickSpends: d.quickSpends||[], cycles };
-  } catch(e) { return { tags:[], tColors:{}, transactions:[], quickSpends:[], cycles:[] }; }
+    return { tags: d.tags||[], tColors: d.tColors||{}, transactions: d.transactions||[], quickSpends: d.quickSpends||[], cycles, recurrences: d.recurrences||[] };
+  } catch(e) { return { tags:[], tColors:{}, transactions:[], quickSpends:[], cycles:[], recurrences:[] }; }
 }
 function saveData(d) { localStorage.setItem(DB_KEY, JSON.stringify(d)); }
+
+// ═══════════════════════════════════════════════════════
+//  RICORRENZE — motore di catch-up
+// ═══════════════════════════════════════════════════════
+function _nextDate(dateStr, freq){
+  const dt=new Date(dateStr+'T00:00:00');
+  if(freq==='weekly')  dt.setDate(dt.getDate()+7);
+  if(freq==='monthly') dt.setMonth(dt.getMonth()+1);
+  if(freq==='yearly')  dt.setFullYear(dt.getFullYear()+1);
+  return dt.toISOString().slice(0,10);
+}
+function runRecurrenceEngine(){
+  const d=loadData();
+  if(!d.recurrences.length) return;
+  const today=new Date().toISOString().slice(0,10);
+  let changed=false;
+  d.recurrences.forEach(r=>{
+    if(!r.active) return;
+    let safety=0;
+    while(r.nextDate<=today && safety<500){
+      d.transactions.push({
+        id:Date.now()+Math.floor(Math.random()*1000),
+        type:r.type, amount:r.amount, tag:r.tag||null,
+        note:(r.note?r.note+' · ':'')+'Ricorrente',
+        ts:new Date(r.nextDate+'T12:00:00').getTime()
+      });
+      r.lastRun=r.nextDate;
+      r.nextDate=_nextDate(r.nextDate,r.freq);
+      changed=true; safety++;
+    }
+  });
+  if(changed) saveData(d);
+}
 
 function calcBalances(d) {
   let income=0, outcome=0;
@@ -1086,6 +1151,79 @@ function openNewCicloFromFab(){
   openNewCiclo(true);
 }
 
+// ═══════════════════════════════════════════════════════
+//  NUOVA RICORRENZA — form
+// ═══════════════════════════════════════════════════════
+let recType=null, recFreq=null, recTag=null;
+function pickRecType(t){
+  recType=t;
+  document.getElementById('rcBtnIn').className  = 'type-btn'+(t==='in'?' in-sel':'');
+  document.getElementById('rcBtnOut').className = 'type-btn'+(t==='out'?' out-sel':'');
+}
+function pickRecFreq(f){
+  recFreq=f;
+  document.getElementById('rcFreqWeekly').className  = 'dest-btn'+(f==='weekly'?' norm-sel':'');
+  document.getElementById('rcFreqMonthly').className = 'dest-btn'+(f==='monthly'?' norm-sel':'');
+  document.getElementById('rcFreqYearly').className  = 'dest-btn'+(f==='yearly'?' norm-sel':'');
+}
+function openNewRec(){
+  recType=null; recFreq=null; recTag=null;
+  document.getElementById('rcBtnIn').className='type-btn';
+  document.getElementById('rcBtnOut').className='type-btn';
+  document.getElementById('rcFreqWeekly').className='dest-btn';
+  document.getElementById('rcFreqMonthly').className='dest-btn';
+  document.getElementById('rcFreqYearly').className='dest-btn';
+  document.getElementById('rcAmt').value='';
+  document.getElementById('rcNote').value='';
+  document.getElementById('rcStartDate').value=new Date().toISOString().slice(0,10);
+  const d=loadData();
+  buildChips('rcChipRow',d,null,function cb(t){recTag=recTag===t?null:t;buildChips('rcChipRow',d,recTag,cb);});
+  document.getElementById('newRecSheet').classList.add('on');
+}
+function doNewRec(){
+  if(!recType){shake('rcBtnIn');return;}
+  if(!recFreq){shake('rcFreqWeekly');return;}
+  const amt=parseFloat(document.getElementById('rcAmt').value);
+  if(!amt||amt<=0){shake('rcAmt');return;}
+  const startDate=document.getElementById('rcStartDate').value;
+  if(!startDate){shake('rcStartDate');return;}
+  const note=document.getElementById('rcNote').value.trim();
+  const d=loadData();
+  d.recurrences.push({
+    id:Date.now(), type:recType, amount:amt, freq:recFreq,
+    tag:recTag||null, note, active:true,
+    nextDate:startDate, lastRun:null
+  });
+  saveData(d);
+  closeSheet('newRecSheet');
+  runRecurrenceEngine();
+  renderAll();
+}
+
+function renderRecList(d){
+  if(!d)d=loadData();
+  const el=document.getElementById('recList'); if(!el)return;
+  el.innerHTML='';
+  if(!d.recurrences.length){ el.innerHTML='<div class="empty" style="padding:14px 0">Nessuna ricorrenza attiva</div>'; return; }
+  const freqLbl={weekly:'Settimanale',monthly:'Mensile',yearly:'Annuale'};
+  d.recurrences.forEach(r=>{
+    const row=document.createElement('div'); row.className='stat-row';
+    row.innerHTML=`
+      <div>
+        <span class="stat-lbl" style="color:${r.type==='in'?'var(--grn)':'var(--red)'}">${r.type==='in'?'+':'\u2212'}${fEur(r.amount)}</span>
+        <div style="font-size:10px;color:var(--t3);margin-top:2px">${freqLbl[r.freq]}${r.tag?' · '+r.tag:''}${r.note?' · '+r.note:''} · prossima ${r.nextDate}</div>
+      </div>
+      <button onclick="deleteRec(${r.id})" style="background:none;border:none;color:var(--t3);cursor:pointer;padding:4px;font-size:18px"><i class="ti ti-trash"></i></button>`;
+    el.appendChild(row);
+  });
+}
+function deleteRec(id){
+  if(!confirm('Eliminare questa ricorrenza? Le transazioni già generate resteranno.')) return;
+  const d=loadData();
+  d.recurrences=d.recurrences.filter(r=>r.id!==id);
+  saveData(d);
+  renderRecList(d);
+}
 // ═══════════════════════════════════════════════════════
 //  QUICK ADD WIDGET (home)
 // ═══════════════════════════════════════════════════════
@@ -1495,6 +1633,7 @@ function calShift(dir){ calViewM+=dir; if(calViewM<0){calViewM=11;calViewY--;}if
 function setPeriod(p,el){ statPeriod=p; document.querySelectorAll('.ptab').forEach(b=>b.classList.remove('on')); el.classList.add('on'); renderStats(); }
 function renderStats(){
   const d=loadData(); const now=new Date(); let from=0;
+  renderRecList(d);
   if(statPeriod==='week'){const f=new Date(now);f.setDate(now.getDate()-7);from=f.getTime();}
   if(statPeriod==='month'){from=new Date(now.getFullYear(),now.getMonth(),1).getTime();}
   if(statPeriod==='year'){from=new Date(now.getFullYear(),0,1).getTime();}
@@ -1583,7 +1722,7 @@ function openNewCiclo(fromFab){
   document.getElementById('ncInitCost').value='';
   document.getElementById('ncEstRev').value='';
   document.getElementById('ncSospeso').checked=false;
-  document.getElementById('ncSospesoLbl').textContent='Non lo so';
+  document.getElementById('ncSospesoLbl').textContent='Confermato';
   document.getElementById('ncEstRev').disabled=false;
   document.getElementById('ncEstRev').style.opacity='1';
   document.getElementById('ncProfitPreview').textContent='';
@@ -1854,6 +1993,7 @@ if (IS_ADD_MODE) {
   document.getElementById('shell').style.display='none';
 } else {
   // Normal mode: show splash then dashboard
+  runRecurrenceEngine();
   setTimeout(() => {
     document.getElementById('splash').classList.add('hide');
     document.getElementById('shell').classList.add('visible');
